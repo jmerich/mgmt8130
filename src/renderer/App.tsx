@@ -3,12 +3,25 @@ import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
 import { PurchaseBlockingPage } from './features/purchase-blocking/PurchaseBlockingPage';
 import { CardMaskingPage } from './features/card-masking/CardMaskingPage';
 import { AutoNegotiationPage } from './features/auto-negotiation/AutoNegotiationPage';
+import { NetflixMockPage } from './features/demo/NetflixMockPage';
 import './App.css';
 
 function App() {
   return (
     <BrowserRouter>
-      <div className="app">
+      <AppContent />
+    </BrowserRouter>
+  );
+}
+
+function AppContent() {
+  const location = window.location;
+  // Check if we are on a demo page
+  const isDemo = location.pathname.includes('/demo/');
+
+  return (
+    <div className="app">
+      {!isDemo && (
         <nav className="sidebar">
           <div className="logo">
             <h1>SubGuard</h1>
@@ -37,17 +50,18 @@ function App() {
             </li>
           </ul>
         </nav>
+      )}
 
-        <main className="content">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/purchase-blocking" element={<PurchaseBlockingPage />} />
-            <Route path="/card-masking" element={<CardMaskingPage />} />
-            <Route path="/auto-negotiation" element={<AutoNegotiationPage />} />
-          </Routes>
-        </main>
-      </div>
-    </BrowserRouter>
+      <main className={isDemo ? "content full-width" : "content"}>
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/purchase-blocking" element={<PurchaseBlockingPage />} />
+          <Route path="/card-masking" element={<CardMaskingPage />} />
+          <Route path="/auto-negotiation" element={<AutoNegotiationPage />} />
+          <Route path="/demo/netflix" element={<NetflixMockPage />} />
+        </Routes>
+      </main>
+    </div>
   );
 }
 
