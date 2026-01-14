@@ -68,9 +68,54 @@ function AppContent() {
   );
 }
 
+// Autonomy settings types
+interface AutonomySettings {
+  level: 'minimal' | 'moderate' | 'high' | 'full';
+  dailySpendingLimit: number;
+  maxShoppingTime: number; // minutes
+  blockCheckoutAbove: number;
+  autoRedirectOnRisk: boolean;
+  enforceColingOff: boolean;
+  coolingOffMinutes: number;
+}
+
+const DEFAULT_AUTONOMY: AutonomySettings = {
+  level: 'moderate',
+  dailySpendingLimit: 200,
+  maxShoppingTime: 60,
+  blockCheckoutAbove: 100,
+  autoRedirectOnRisk: false,
+  enforceColingOff: true,
+  coolingOffMinutes: 5
+};
+
+const AUTONOMY_PRESETS: Record<string, Partial<AutonomySettings>> = {
+  minimal: {
+    autoRedirectOnRisk: false,
+    enforceColingOff: false,
+  },
+  moderate: {
+    autoRedirectOnRisk: false,
+    enforceColingOff: true,
+    coolingOffMinutes: 5
+  },
+  high: {
+    autoRedirectOnRisk: true,
+    enforceColingOff: true,
+    coolingOffMinutes: 10
+  },
+  full: {
+    autoRedirectOnRisk: true,
+    enforceColingOff: true,
+    coolingOffMinutes: 15
+  }
+};
+
 function Dashboard() {
   const [extensionData, setExtensionData] = React.useState<any>(null);
   const [extensionConnected, setExtensionConnected] = React.useState(false);
+  const [autonomySettings, setAutonomySettings] = React.useState<AutonomySettings>(DEFAULT_AUTONOMY);
+  const [settingsSaved, setSettingsSaved] = React.useState(false);
 
   // Fetch extension data periodically
   React.useEffect(() => {
@@ -91,6 +136,47 @@ function Dashboard() {
     const interval = setInterval(fetchExtensionData, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  // Fetch autonomy settings
+  React.useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await fetch('http://localhost:3001/api/autonomy/settings');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.settings) {
+            setAutonomySettings(data.settings);
+          }
+        }
+      } catch (error) {
+        console.log('Using default autonomy settings');
+      }
+    };
+    fetchSettings();
+  }, []);
+
+  // Save autonomy settings
+  const saveAutonomySettings = async (newSettings: AutonomySettings) => {
+    setAutonomySettings(newSettings);
+    try {
+      await fetch('http://localhost:3001/api/autonomy/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ settings: newSettings })
+      });
+      setSettingsSaved(true);
+      setTimeout(() => setSettingsSaved(false), 2000);
+    } catch (error) {
+      console.error('Failed to save settings');
+    }
+  };
+
+  // Handle autonomy level change
+  const handleAutonomyLevelChange = (level: AutonomySettings['level']) => {
+    const preset = AUTONOMY_PRESETS[level];
+    const newSettings = { ...autonomySettings, ...preset, level };
+    saveAutonomySettings(newSettings);
+  };
 
   // Demo savings data
   const savingsData = {
@@ -208,6 +294,156 @@ function Dashboard() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* AI Autonomy Configuration */}
+      <div className="autonomy-section">
+        <div className="section-header">
+          <h3>AI Autonomy Level</h3>
+          {settingsSaved && <span className="saved-badge">Settings Saved</span>}
+        </div>
+
+        <div className="autonomy-levels">
+          {(['minimal', 'moderate', 'high', 'full'] as const).map((level) => (
+            <button
+              key={level}
+              className={`autonomy-level-btn ${autonomySettings.level === level ? 'active' : ''}`}
+              onClick={() => handleAutonomyLevelChange(level)}
+            >
+              <div className="level-icon">
+                {level === 'minimal' && '👁️'}
+                {level === 'moderate' && '🛡️'}
+                {level === 'high' && '🤖'}
+                {level === 'full' && '🧠'}
+              </div>
+              <div className="level-name">{level.charAt(0).toUpperCase() + level.slice(1)}</div>
+              <div className="level-desc">
+                {level === 'minimal' && 'Monitor only'}
+                {level === 'moderate' && 'Gentle nudges'}
+                {level === 'high' && 'Active intervention'}
+                {level === 'full' && 'Full AI control'}
+              </div>
+            </button>
+          ))}
+        </div>
+
+        <div className="autonomy-details">
+          {autonomySettings.level === 'minimal' && (
+            <div className="autonomy-description">
+              <h4>Observer Mode</h4>
+              <p>SubGuard will silently track your browsing and shopping behavior without any interventions. You'll see analytics in the dashboard but won't be interrupted.</p>
+              <ul className="autonomy-features">
+                <li><span className="feature-status off"></span>No automatic redirects</li>
+                <li><span className="feature-status off"></span>No cooling-off periods</li>
+                <li><span className="feature-status on"></span>Activity tracking only</li>
+              </ul>
+            </div>
+          )}
+          {autonomySettings.level === 'moderate' && (
+            <div className="autonomy-description">
+              <h4>Guided Protection</h4>
+              <p>SubGuard will show helpful reminders and require brief pauses before purchases, but won't block or redirect you automatically.</p>
+              <ul className="autonomy-features">
+                <li><span className="feature-status off"></span>No automatic redirects</li>
+                <li><span className="feature-status on"></span>5-minute cooling-off for large purchases</li>
+                <li><span className="feature-status on"></span>Risk warnings and nudges</li>
+              </ul>
+            </div>
+          )}
+          {autonomySettings.level === 'high' && (
+            <div className="autonomy-description">
+              <h4>Active Guardian</h4>
+              <p>SubGuard will actively intervene when it detects risky shopping behavior, including automatic redirects when spending limits are exceeded.</p>
+              <ul className="autonomy-features">
+                <li><span className="feature-status on"></span>Auto-redirect on high risk</li>
+                <li><span className="feature-status on"></span>10-minute cooling-off enforced</li>
+                <li><span className="feature-status on"></span>Checkout blocking above limits</li>
+              </ul>
+            </div>
+          )}
+          {autonomySettings.level === 'full' && (
+            <div className="autonomy-description full-autonomy">
+              <h4>Full AI Autonomy</h4>
+              <p>SubGuard takes complete control of your shopping protection. The AI will automatically redirect you away from shopping sites when behavior doesn't align with your goals.</p>
+              <ul className="autonomy-features">
+                <li><span className="feature-status on"></span>Automatic redirects when over time/spend limits</li>
+                <li><span className="feature-status on"></span>15-minute mandatory cooling-off</li>
+                <li><span className="feature-status on"></span>AI decides when shopping session ends</li>
+                <li><span className="feature-status on"></span>Blocks checkout if daily limit exceeded</li>
+              </ul>
+              <div className="full-autonomy-warning">
+                <span className="warning-icon">⚠️</span>
+                <span>In full autonomy mode, SubGuard may redirect you away from pages with an explanation of why this action was taken.</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="autonomy-settings-grid">
+          <div className="setting-card">
+            <label>Daily Spending Limit</label>
+            <div className="setting-input">
+              <span className="input-prefix">$</span>
+              <input
+                type="number"
+                value={autonomySettings.dailySpendingLimit}
+                onChange={(e) => saveAutonomySettings({
+                  ...autonomySettings,
+                  dailySpendingLimit: parseInt(e.target.value) || 0
+                })}
+              />
+            </div>
+            <span className="setting-hint">AI will warn/block purchases beyond this</span>
+          </div>
+
+          <div className="setting-card">
+            <label>Max Shopping Time</label>
+            <div className="setting-input">
+              <input
+                type="number"
+                value={autonomySettings.maxShoppingTime}
+                onChange={(e) => saveAutonomySettings({
+                  ...autonomySettings,
+                  maxShoppingTime: parseInt(e.target.value) || 0
+                })}
+              />
+              <span className="input-suffix">min</span>
+            </div>
+            <span className="setting-hint">Daily shopping time before AI intervenes</span>
+          </div>
+
+          <div className="setting-card">
+            <label>Block Checkout Above</label>
+            <div className="setting-input">
+              <span className="input-prefix">$</span>
+              <input
+                type="number"
+                value={autonomySettings.blockCheckoutAbove}
+                onChange={(e) => saveAutonomySettings({
+                  ...autonomySettings,
+                  blockCheckoutAbove: parseInt(e.target.value) || 0
+                })}
+              />
+            </div>
+            <span className="setting-hint">Require cooling-off for purchases above</span>
+          </div>
+
+          <div className="setting-card">
+            <label>Cooling-Off Period</label>
+            <div className="setting-input">
+              <input
+                type="number"
+                value={autonomySettings.coolingOffMinutes}
+                onChange={(e) => saveAutonomySettings({
+                  ...autonomySettings,
+                  coolingOffMinutes: parseInt(e.target.value) || 0
+                })}
+              />
+              <span className="input-suffix">min</span>
+            </div>
+            <span className="setting-hint">Wait time before allowing purchase</span>
+          </div>
+        </div>
       </div>
 
       <div className="feature-cards">

@@ -22,6 +22,7 @@
   // State
   let pageAnalysis = null;
   let overlayVisible = false;
+  let autonomySettings = null;
   let sessionData = {
     startTime: Date.now(),
     pagesVisited: 0,
@@ -31,13 +32,291 @@
     timeOnShoppingSites: 0
   };
 
+  const SUBGUARD_API = 'http://localhost:3001/api';
+
   // Initialize
   function init() {
     console.log('[SubGuard] Content script initialized');
+    fetchAutonomySettings();
     analyzePage();
     setupMutationObserver();
     setupEventListeners();
     reportToBackground();
+    checkAutonomyEnforcement();
+  }
+
+  // Fetch autonomy settings from API
+  async function fetchAutonomySettings() {
+    try {
+      const response = await fetch(`${SUBGUARD_API}/autonomy/settings`);
+      if (response.ok) {
+        const data = await response.json();
+        autonomySettings = data.settings;
+        console.log('[SubGuard] Autonomy settings loaded:', autonomySettings?.level);
+      }
+    } catch (error) {
+      console.log('[SubGuard] Could not fetch autonomy settings');
+    }
+  }
+
+  // Check and enforce autonomy rules
+  async function checkAutonomyEnforcement() {
+    if (!pageAnalysis?.isShoppingSite) return;
+
+    try {
+      const response = await fetch(`${SUBGUARD_API}/autonomy/check`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: pageAnalysis.isCheckoutPage ? 'checkout' : 'browse',
+          context: {
+            totalSpentToday: sessionData.pricesViewed.reduce((a, b) => a + b, 0),
+            timeOnShoppingSites: sessionData.timeOnShoppingSites,
+            currentPrice: pageAnalysis.prices.length > 0 ? Math.max(...pageAnalysis.prices) : 0,
+            riskLevel: pageAnalysis.riskLevel
+          }
+        })
+      });
+
+      if (response.ok) {
+        const decision = await response.json();
+        if (!decision.allow) {
+          handleAutonomyDecision(decision);
+        }
+      }
+    } catch (error) {
+      console.log('[SubGuard] Autonomy check failed');
+    }
+  }
+
+  // Handle autonomy decision
+  function handleAutonomyDecision(decision) {
+    console.log('[SubGuard] Autonomy decision:', decision);
+
+    if (decision.action === 'redirect_away') {
+      showRedirectOverlay(decision);
+    } else if (decision.action === 'block_checkout') {
+      showBlockOverlay(decision);
+    } else if (decision.action === 'require_cooloff') {
+      showCooloffOverlay(decision);
+    }
+  }
+
+  // Show redirect overlay (for full autonomy mode)
+  function showRedirectOverlay(decision) {
+    if (overlayVisible) return;
+
+    const overlay = createElement('div');
+    overlay.id = 'subguard-autonomy-overlay';
+    overlay.className = 'subguard-redirect-overlay';
+
+    const modal = createElement('div', 'subguard-autonomy-modal');
+
+    // Header
+    const header = createElement('div', 'autonomy-header');
+    const icon = createElement('div', 'autonomy-icon', '\uD83E\uDDE0');
+    const title = createElement('h2', null, 'SubGuard AI is Taking Action');
+    header.appendChild(icon);
+    header.appendChild(title);
+    modal.appendChild(header);
+
+    // Message
+    const message = createElement('div', 'autonomy-message');
+    message.appendChild(createElement('p', 'autonomy-reason', decision.message));
+
+    const explanation = createElement('div', 'autonomy-explanation');
+    if (decision.reason === 'time_limit_exceeded') {
+      explanation.appendChild(createElement('p', null, "You've exceeded your daily shopping time limit. Taking breaks helps you make better financial decisions."));
+    } else if (decision.reason === 'daily_limit_exceeded') {
+      explanation.appendChild(createElement('p', null, "You've reached your spending limit for today. This helps you stay within your budget."));
+    } else if (decision.reason === 'high_risk_detected') {
+      explanation.appendChild(createElement('p', null, "The AI detected patterns associated with impulse purchases. Taking a step back now can prevent buyer's regret."));
+    }
+    message.appendChild(explanation);
+    modal.appendChild(message);
+
+    // Countdown
+    const countdown = createElement('div', 'autonomy-countdown');
+    countdown.appendChild(createElement('p', null, 'Redirecting you in'));
+    const timer = createElement('span', 'countdown-timer', '5');
+    countdown.appendChild(timer);
+    countdown.appendChild(createElement('span', null, ' seconds'));
+    modal.appendChild(countdown);
+
+    // Actions
+    const actions = createElement('div', 'autonomy-actions');
+    const acceptBtn = createElement('button', 'autonomy-btn accept', 'Take Me Away Now');
+    const overrideBtn = createElement('button', 'autonomy-btn override', 'Override (Not Recommended)');
+    actions.appendChild(acceptBtn);
+    actions.appendChild(overrideBtn);
+    modal.appendChild(actions);
+
+    // Footer
+    const footer = createElement('div', 'autonomy-footer');
+    footer.appendChild(createElement('p', null, 'Full AI Autonomy Mode is enabled. Change this in your SubGuard dashboard.'));
+    modal.appendChild(footer);
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    overlayVisible = true;
+
+    // Countdown and redirect
+    let seconds = 5;
+    const countdownInterval = setInterval(() => {
+      seconds--;
+      timer.textContent = seconds.toString();
+      if (seconds <= 0) {
+        clearInterval(countdownInterval);
+        window.location.href = 'http://localhost:5173/?redirected=true&reason=' + encodeURIComponent(decision.reason);
+      }
+    }, 1000);
+
+    acceptBtn.addEventListener('click', () => {
+      clearInterval(countdownInterval);
+      window.location.href = 'http://localhost:5173/?redirected=true&reason=' + encodeURIComponent(decision.reason);
+    });
+
+    overrideBtn.addEventListener('click', () => {
+      clearInterval(countdownInterval);
+      overlay.remove();
+      overlayVisible = false;
+      chrome.runtime.sendMessage({ type: 'AUTONOMY_OVERRIDE', decision });
+    });
+  }
+
+  // Show block overlay (for checkout blocking)
+  function showBlockOverlay(decision) {
+    if (overlayVisible) return;
+
+    const overlay = createElement('div');
+    overlay.id = 'subguard-autonomy-overlay';
+    overlay.className = 'subguard-block-overlay';
+
+    const modal = createElement('div', 'subguard-autonomy-modal');
+
+    const header = createElement('div', 'autonomy-header');
+    header.appendChild(createElement('div', 'autonomy-icon', '\uD83D\uDEAB'));
+    header.appendChild(createElement('h2', null, 'Checkout Blocked'));
+    modal.appendChild(header);
+
+    const message = createElement('div', 'autonomy-message');
+    message.appendChild(createElement('p', 'autonomy-reason', decision.message));
+    message.appendChild(createElement('p', null, 'This is helping you stick to your financial goals.'));
+    modal.appendChild(message);
+
+    const actions = createElement('div', 'autonomy-actions');
+    const backBtn = createElement('button', 'autonomy-btn accept', 'Go Back to Shopping');
+    const dashboardBtn = createElement('button', 'autonomy-btn secondary', 'View Dashboard');
+    actions.appendChild(backBtn);
+    actions.appendChild(dashboardBtn);
+    modal.appendChild(actions);
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    overlayVisible = true;
+
+    backBtn.addEventListener('click', () => {
+      overlay.remove();
+      overlayVisible = false;
+      window.history.back();
+    });
+
+    dashboardBtn.addEventListener('click', () => {
+      window.location.href = 'http://localhost:5173';
+    });
+  }
+
+  // Show cooling-off overlay
+  function showCooloffOverlay(decision) {
+    if (overlayVisible) return;
+
+    const overlay = createElement('div');
+    overlay.id = 'subguard-autonomy-overlay';
+    overlay.className = 'subguard-cooloff-overlay';
+
+    const modal = createElement('div', 'subguard-autonomy-modal');
+
+    const header = createElement('div', 'autonomy-header');
+    header.appendChild(createElement('div', 'autonomy-icon', '\u23F1\uFE0F'));
+    header.appendChild(createElement('h2', null, 'Cooling-Off Period'));
+    modal.appendChild(header);
+
+    const message = createElement('div', 'autonomy-message');
+    message.appendChild(createElement('p', 'autonomy-reason', decision.message));
+    modal.appendChild(message);
+
+    // Timer display
+    const timerDisplay = createElement('div', 'cooloff-timer-display');
+    const minutes = decision.cooloffMinutes || 5;
+    let remainingSeconds = minutes * 60;
+    const timerText = createElement('span', 'cooloff-time', formatTime(remainingSeconds));
+    timerDisplay.appendChild(createElement('p', null, 'Time remaining:'));
+    timerDisplay.appendChild(timerText);
+    modal.appendChild(timerDisplay);
+
+    // Progress bar
+    const progressContainer = createElement('div', 'cooloff-progress');
+    const progressBar = createElement('div', 'cooloff-progress-bar');
+    progressBar.style.width = '100%';
+    progressContainer.appendChild(progressBar);
+    modal.appendChild(progressContainer);
+
+    // Reflection prompts
+    const prompts = createElement('div', 'cooloff-prompts');
+    prompts.appendChild(createElement('h4', null, 'While you wait, consider:'));
+    const promptList = createElement('ul');
+    ['Is this purchase aligned with my financial goals?', 'Will I still want this item next week?', 'Is there a more affordable alternative?', 'Am I buying this out of emotion or necessity?'].forEach(text => {
+      promptList.appendChild(createElement('li', null, text));
+    });
+    prompts.appendChild(promptList);
+    modal.appendChild(prompts);
+
+    const actions = createElement('div', 'autonomy-actions');
+    const proceedBtn = createElement('button', 'autonomy-btn accept disabled', 'Proceed with Purchase');
+    proceedBtn.disabled = true;
+    const cancelBtn = createElement('button', 'autonomy-btn secondary', 'Cancel Purchase');
+    actions.appendChild(proceedBtn);
+    actions.appendChild(cancelBtn);
+    modal.appendChild(actions);
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    overlayVisible = true;
+
+    // Countdown
+    const totalSeconds = remainingSeconds;
+    const countdownInterval = setInterval(() => {
+      remainingSeconds--;
+      timerText.textContent = formatTime(remainingSeconds);
+      progressBar.style.width = ((remainingSeconds / totalSeconds) * 100) + '%';
+
+      if (remainingSeconds <= 0) {
+        clearInterval(countdownInterval);
+        proceedBtn.disabled = false;
+        proceedBtn.classList.remove('disabled');
+        proceedBtn.textContent = 'Proceed with Purchase';
+      }
+    }, 1000);
+
+    proceedBtn.addEventListener('click', () => {
+      if (!proceedBtn.disabled) {
+        overlay.remove();
+        overlayVisible = false;
+      }
+    });
+
+    cancelBtn.addEventListener('click', () => {
+      clearInterval(countdownInterval);
+      overlay.remove();
+      overlayVisible = false;
+      window.history.back();
+    });
+  }
+
+  function formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   }
 
   // Analyze current page

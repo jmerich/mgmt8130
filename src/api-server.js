@@ -25,6 +25,17 @@ let extensionData = {
   riskEvents: []
 };
 
+// Autonomy settings store
+let autonomySettings = {
+  level: 'moderate',
+  dailySpendingLimit: 200,
+  maxShoppingTime: 60,
+  blockCheckoutAbove: 100,
+  autoRedirectOnRisk: false,
+  enforceColingOff: true,
+  coolingOffMinutes: 5
+};
+
 // Sync endpoint - receives data from extension
 app.post('/api/extension/sync', (req, res) => {
   const { sessionId, dailyStats, currentSession, timestamp } = req.body;
@@ -99,6 +110,86 @@ app.get('/api/health', (req, res) => {
     uptime: process.uptime(),
     lastSync: extensionData.lastSync
   });
+});
+
+// ==================== AUTONOMY SETTINGS ====================
+
+// Get autonomy settings
+app.get('/api/autonomy/settings', (req, res) => {
+  res.json({ settings: autonomySettings });
+});
+
+// Update autonomy settings
+app.post('/api/autonomy/settings', (req, res) => {
+  const { settings } = req.body;
+  if (settings) {
+    autonomySettings = { ...autonomySettings, ...settings };
+    console.log('[API] Autonomy settings updated:', autonomySettings);
+  }
+  res.json({ success: true, settings: autonomySettings });
+});
+
+// Check if action should be taken (called by extension)
+app.post('/api/autonomy/check', (req, res) => {
+  const { action, context } = req.body;
+  const { totalSpentToday, timeOnShoppingSites, currentPrice, riskLevel } = context || {};
+
+  let decision = {
+    allow: true,
+    action: null,
+    reason: null,
+    message: null
+  };
+
+  // Only enforce if autonomy level is high or full
+  if (autonomySettings.level === 'high' || autonomySettings.level === 'full') {
+
+    // Check daily spending limit
+    if (totalSpentToday >= autonomySettings.dailySpendingLimit) {
+      decision = {
+        allow: false,
+        action: 'block_checkout',
+        reason: 'daily_limit_exceeded',
+        message: `You've reached your daily spending limit of $${autonomySettings.dailySpendingLimit}. SubGuard is protecting your financial goals.`
+      };
+    }
+
+    // Check shopping time limit
+    if (timeOnShoppingSites >= autonomySettings.maxShoppingTime * 60) {
+      decision = {
+        allow: false,
+        action: 'redirect_away',
+        reason: 'time_limit_exceeded',
+        message: `You've been shopping for ${autonomySettings.maxShoppingTime} minutes today. SubGuard is helping you take a break.`
+      };
+    }
+
+    // Check price threshold
+    if (currentPrice > autonomySettings.blockCheckoutAbove && action === 'checkout') {
+      decision = {
+        allow: false,
+        action: 'require_cooloff',
+        reason: 'price_threshold',
+        cooloffMinutes: autonomySettings.coolingOffMinutes,
+        message: `This purchase of $${currentPrice} requires a ${autonomySettings.coolingOffMinutes}-minute cooling-off period.`
+      };
+    }
+
+    // Auto-redirect on high risk (full autonomy only)
+    if (autonomySettings.level === 'full' && autonomySettings.autoRedirectOnRisk) {
+      if (riskLevel === 'critical' || (riskLevel === 'high' && action === 'checkout')) {
+        decision = {
+          allow: false,
+          action: 'redirect_away',
+          reason: 'high_risk_detected',
+          message: `SubGuard detected high-risk shopping behavior. Redirecting you to protect your financial wellbeing.`
+        };
+      }
+    }
+  }
+
+  console.log('[API] Autonomy check:', { action, decision });
+  res.json(decision);
 });
 
 // Start server

@@ -483,3 +483,239 @@
     text-align: center;
   }
 }
+
+/* AI Autonomy Section */
+.autonomy-section {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border: 1px solid #e0e0e0;
+}
+
+.saved-badge {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  animation: fadeInOut 2s ease;
+}
+
+@keyframes fadeInOut {
+  0%, 100% { opacity: 0; }
+  20%, 80% { opacity: 1; }
+}
+
+/* Autonomy Level Buttons */
+.autonomy-levels {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.autonomy-level-btn {
+  background: #f8f9fa;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 1.25rem 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.autonomy-level-btn:hover {
+  border-color: #6366f1;
+  background: rgba(99, 102, 241, 0.05);
+}
+
+.autonomy-level-btn.active {
+  border-color: #6366f1;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(79, 70, 229, 0.1) 100%);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+}
+
+.level-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.level-name {
+  font-weight: 700;
+  color: #1a1a2e;
+  font-size: 0.95rem;
+  margin-bottom: 0.25rem;
+}
+
+.level-desc {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.autonomy-level-btn.active .level-name {
+  color: #6366f1;
+}
+
+/* Autonomy Description */
+.autonomy-details {
+  margin-bottom: 1.5rem;
+}
+
+.autonomy-description {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 1.25rem;
+  border-left: 4px solid #6366f1;
+}
+
+.autonomy-description.full-autonomy {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(168, 85, 247, 0.08) 100%);
+  border-left-color: #a855f7;
+}
+
+.autonomy-description h4 {
+  margin: 0 0 0.5rem 0;
+  color: #1a1a2e;
+  font-size: 1rem;
+}
+
+.autonomy-description p {
+  margin: 0 0 1rem 0;
+  color: #64748b;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.autonomy-features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.autonomy-features li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: #475569;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 6px 12px;
+  border-radius: 6px;
+}
+
+.feature-status {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.feature-status.on {
+  background: #22c55e;
+}
+
+.feature-status.off {
+  background: #94a3b8;
+}
+
+.full-autonomy-warning {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(251, 191, 36, 0.15);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: #92400e;
+}
+
+.warning-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+/* Autonomy Settings Grid */
+.autonomy-settings-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.setting-card {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+.setting-card label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 0.5rem;
+}
+
+.setting-input {
+  display: flex;
+  align-items: center;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.setting-input input {
+  flex: 1;
+  border: none;
+  padding: 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1a1a2e;
+  width: 100%;
+  outline: none;
+}
+
+.setting-input input:focus {
+  background: rgba(99, 102, 241, 0.05);
+}
+
+.input-prefix,
+.input-suffix {
+  padding: 0.75rem;
+  background: #f1f5f9;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.setting-hint {
+  display: block;
+  font-size: 0.7rem;
+  color: #94a3b8;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 900px) {
+  .autonomy-levels {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .autonomy-settings-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .autonomy-levels {
+    grid-template-columns: 1fr;
+  }
+
+  .autonomy-settings-grid {
+    grid-template-columns: 1fr;
+  }
+}
