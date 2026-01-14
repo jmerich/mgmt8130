@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SubGuard AI</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <header class="popup-header">
+      <div class="logo">
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+          <circle cx="16" cy="16" r="14" stroke="#6366f1" stroke-width="2"/>
+          <path d="M16 8v8l6 3" stroke="#6366f1" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <span>SubGuard AI</span>
+      </div>
+      <div class="status-indicator" id="status-indicator">
+        <span class="status-dot active"></span>
+        <span class="status-text">Active</span>
+      </div>
+    </header>
+
+    <section class="current-page" id="current-page">
+      <h3>Current Page</h3>
+      <div class="page-analysis" id="page-analysis">
+        <div class="analysis-loading">Analyzing...</div>
+      </div>
+    </section>
+
+    <section class="session-stats">
+      <h3>Today's Activity</h3>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-value" id="shopping-sites">0</span>
+          <span class="stat-label">Shopping Sites</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value" id="cart-interactions">0</span>
+          <span class="stat-label">Cart Actions</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value" id="time-shopping">0m</span>
+          <span class="stat-label">Time Shopping</span>
+        </div>
+        <div class="stat-card highlight">
+          <span class="stat-value" id="prevented">0</span>
+          <span class="stat-label">Prevented</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="potential-savings">
+      <div class="savings-card">
+        <div class="savings-icon">💰</div>
+        <div class="savings-info">
+          <span class="savings-label">Potential Spend Today</span>
+          <span class="savings-value" id="potential-spend">$0.00</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="quick-actions">
+      <button class="action-btn" id="trigger-check">
+        <span class="btn-icon">🔍</span>
+        Analyze This Page
+      </button>
+      <button class="action-btn" id="open-dashboard">
+        <span class="btn-icon">📊</span>
+        Open Dashboard
+      </button>
+    </section>
+
+    <section class="settings-toggle">
+      <label class="toggle-row">
+        <span>Protection Enabled</span>
+        <input type="checkbox" id="protection-toggle" checked>
+        <span class="toggle-slider"></span>
+      </label>
+      <label class="toggle-row">
+        <span>Sync with App</span>
+        <input type="checkbox" id="sync-toggle" checked>
+        <span class="toggle-slider"></span>
+      </label>
+    </section>
+
+    <footer class="popup-footer">
+      <span>SubGuard protects your financial wellbeing</span>
+    </footer>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

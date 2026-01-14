@@ -4,14 +4,17 @@
   "description": "Subscription management and purchase protection tool",
   "main": "dist/electron/main.js",
   "scripts": {
-    "dev": "concurrently \"npm run dev:renderer\" \"npm run dev:electron\"",
+    "dev": "concurrently \"npm run dev:renderer\" \"npm run dev:electron\" \"npm run dev:api\"",
     "dev:renderer": "vite",
     "dev:electron": "tsc -p tsconfig.electron.json && wait-on http://localhost:5173 && electron .",
+    "dev:api": "node src/api-server.js",
     "build": "tsc -p tsconfig.electron.json && tsc && vite build && electron-builder",
     "test": "vitest",
     "lint": "eslint src --ext .ts,.tsx"
   },
   "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.20.0",

@@ -69,6 +69,29 @@ function AppContent() {
 }
 
 function Dashboard() {
+  const [extensionData, setExtensionData] = React.useState<any>(null);
+  const [extensionConnected, setExtensionConnected] = React.useState(false);
+
+  // Fetch extension data periodically
+  React.useEffect(() => {
+    const fetchExtensionData = async () => {
+      try {
+        const response = await fetch('http://localhost:3001/api/extension/data');
+        if (response.ok) {
+          const data = await response.json();
+          setExtensionData(data);
+          setExtensionConnected(data.lastSync !== null);
+        }
+      } catch (error) {
+        setExtensionConnected(false);
+      }
+    };
+
+    fetchExtensionData();
+    const interval = setInterval(fetchExtensionData, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Demo savings data
   const savingsData = {
     blockedPurchases: { count: 12, amount: 847.50 },
@@ -79,6 +102,15 @@ function Dashboard() {
   const totalSaved = savingsData.blockedPurchases.amount +
     savingsData.trialsSaved.amount +
     savingsData.negotiationSavings.yearly;
+
+  // Extension stats
+  const browserStats = extensionData?.dailyStats || {
+    shoppingSitesVisited: 0,
+    cartInteractions: 0,
+    purchasesPrevented: 0,
+    totalPotentialSpend: 0,
+    totalTimeOnShoppingSites: 0
+  };
 
   return (
     <div className="dashboard">
@@ -108,6 +140,74 @@ function Dashboard() {
             <span className="savings-desc">negotiated savings</span>
           </div>
         </div>
+      </div>
+
+      {/* Browser Extension Activity */}
+      <div className="browser-activity-section">
+        <div className="section-header">
+          <h3>Browser Activity Monitor</h3>
+          <div className={`extension-status ${extensionConnected ? 'connected' : 'disconnected'}`}>
+            <span className="status-dot"></span>
+            <span>{extensionConnected ? 'Extension Connected' : 'Extension Not Connected'}</span>
+          </div>
+        </div>
+
+        <div className="browser-stats-grid">
+          <div className="browser-stat-card">
+            <div className="stat-icon">🛒</div>
+            <div className="stat-value">{browserStats.shoppingSitesVisited}</div>
+            <div className="stat-label">Shopping Sites Today</div>
+          </div>
+          <div className="browser-stat-card">
+            <div className="stat-icon">🛍️</div>
+            <div className="stat-value">{browserStats.cartInteractions}</div>
+            <div className="stat-label">Cart Interactions</div>
+          </div>
+          <div className="browser-stat-card highlight">
+            <div className="stat-icon">🚫</div>
+            <div className="stat-value">{browserStats.purchasesPrevented}</div>
+            <div className="stat-label">Purchases Prevented</div>
+          </div>
+          <div className="browser-stat-card">
+            <div className="stat-icon">💰</div>
+            <div className="stat-value">${browserStats.totalPotentialSpend.toFixed(0)}</div>
+            <div className="stat-label">Potential Spend</div>
+          </div>
+        </div>
+
+        {extensionData?.pageAnalyses && extensionData.pageAnalyses.length > 0 && (
+          <div className="recent-activity">
+            <h4>Recent Shopping Activity</h4>
+            <div className="activity-list">
+              {extensionData.pageAnalyses.slice(0, 5).map((analysis: any, idx: number) => (
+                <div key={idx} className={`activity-item risk-${analysis.riskLevel}`}>
+                  <div className="activity-domain">{analysis.domain}</div>
+                  <div className="activity-meta">
+                    <span className={`risk-badge ${analysis.riskLevel}`}>{analysis.riskLevel}</span>
+                    {analysis.prices?.length > 0 && (
+                      <span className="price-tag">${Math.max(...analysis.prices).toFixed(2)}</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {!extensionConnected && (
+          <div className="extension-prompt">
+            <div className="prompt-icon">🔌</div>
+            <div className="prompt-content">
+              <h4>Install Browser Extension</h4>
+              <p>Get real-time shopping protection by installing the SubGuard browser extension.</p>
+              <ol className="install-steps">
+                <li>Open Chrome and go to <code>chrome://extensions</code></li>
+                <li>Enable "Developer mode" in the top right</li>
+                <li>Click "Load unpacked" and select the <code>chrome-extension</code> folder</li>
+              </ol>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="feature-cards">

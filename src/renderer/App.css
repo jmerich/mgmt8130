@@ -224,3 +224,262 @@
   height: 200px;
   color: #666;
 }
+
+/* Browser Activity Section */
+.browser-activity-section {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border: 1px solid #e0e0e0;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.section-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #1a1a2e;
+}
+
+.extension-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.extension-status.connected {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+}
+
+.extension-status.disconnected {
+  background: rgba(100, 116, 139, 0.1);
+  color: #64748b;
+}
+
+.extension-status .status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.extension-status.connected .status-dot {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Browser Stats Grid */
+.browser-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.browser-stat-card {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 1.25rem;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.browser-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.browser-stat-card.highlight {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(21, 128, 61, 0.15) 100%);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.browser-stat-card .stat-icon {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.browser-stat-card .stat-value {
+  display: block;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.browser-stat-card.highlight .stat-value {
+  color: #22c55e;
+}
+
+.browser-stat-card .stat-label {
+  display: block;
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+/* Recent Activity */
+.recent-activity {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+.recent-activity h4 {
+  margin: 0 0 1rem 0;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.activity-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 3px solid #e0e0e0;
+}
+
+.activity-item.risk-low {
+  border-left-color: #22c55e;
+}
+
+.activity-item.risk-medium {
+  border-left-color: #eab308;
+}
+
+.activity-item.risk-high {
+  border-left-color: #f97316;
+}
+
+.activity-item.risk-critical {
+  border-left-color: #ef4444;
+}
+
+.activity-domain {
+  font-weight: 500;
+  color: #1a1a2e;
+}
+
+.activity-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.risk-badge {
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.risk-badge.low {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+}
+
+.risk-badge.medium {
+  background: rgba(234, 179, 8, 0.15);
+  color: #ca8a04;
+}
+
+.risk-badge.high {
+  background: rgba(249, 115, 22, 0.15);
+  color: #ea580c;
+}
+
+.risk-badge.critical {
+  background: rgba(239, 68, 68, 0.15);
+  color: #dc2626;
+}
+
+.price-tag {
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+/* Extension Prompt */
+.extension-prompt {
+  display: flex;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(79, 70, 229, 0.08) 100%);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 12px;
+  margin-top: 1rem;
+}
+
+.prompt-icon {
+  font-size: 2.5rem;
+  flex-shrink: 0;
+}
+
+.prompt-content h4 {
+  margin: 0 0 0.5rem 0;
+  color: #1a1a2e;
+}
+
+.prompt-content p {
+  margin: 0 0 1rem 0;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.install-steps {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: #475569;
+  font-size: 0.85rem;
+}
+
+.install-steps li {
+  margin-bottom: 0.5rem;
+}
+
+.install-steps code {
+  background: rgba(0, 0, 0, 0.08);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .browser-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .browser-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .extension-prompt {
+    flex-direction: column;
+    text-align: center;
+  }
+}
