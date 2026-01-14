@@ -14,6 +14,8 @@ export function CardMaskingPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const { showToast } = useToast();
   const [adobeStatus, setAdobeStatus] = useState<'safe' | 'zombie' | 'cancelling' | 'terminated'>('zombie');
+  const [graveyard, setGraveyard] = useState<{ id: string; service: string; deathTime: string; entropy: string }[]>([]);
+  const [showGraveyard, setShowGraveyard] = useState(false);
 
   const handleAutoCancel = () => {
     setAdobeStatus('cancelling');
@@ -22,6 +24,15 @@ export function CardMaskingPage() {
     setTimeout(() => {
       setAdobeStatus('terminated');
       showToast('Subscription Terminated: Adobe Creative Cloud', 'success', '🛡️');
+
+      // Move to Graveyard
+      const deadSub = {
+        id: 'adobe-dead',
+        service: 'Adobe Creative Cloud',
+        deathTime: 'Just now',
+        entropy: '99.8 (Critical)'
+      };
+      setGraveyard(prev => [deadSub, ...prev]);
 
       // Add log to feed
       const newLog = {
@@ -35,6 +46,20 @@ export function CardMaskingPage() {
       };
       setFeedItems(prev => [newLog, ...prev]);
     }, 2000);
+  };
+
+  const handleReinstate = (item: any) => {
+    // 1. Remove from Graveyard
+    setGraveyard(prev => prev.filter(i => i.id !== item.id));
+
+    // 2. Logic specific to Adobe for this demo
+    if (item.service === 'Adobe Creative Cloud') {
+      setAdobeStatus('zombie'); // Revert to initial state for demo
+    }
+
+    // 3. Show Toast & Close
+    showToast(`Resurrected ${item.service} with new Masked Card`, 'success', '💎');
+    setTimeout(() => setShowGraveyard(false), 500);
   };
 
   const [feedItems, setFeedItems] = useState([
@@ -427,11 +452,57 @@ export function CardMaskingPage() {
         </div>
       </div>
 
-      <div className="methodology-link">
+      <div className="methodology-link" style={{ gap: '2rem' }}>
         <button onClick={() => setShowMethodology(true)}>
-          Methodology: How Sentience Works
+          Methodology
+        </button>
+        <button onClick={() => setShowGraveyard(true)} style={{ color: '#888' }}>
+          View Graveyard 🪦 ({graveyard.length})
         </button>
       </div>
+
+      {showGraveyard && (
+        <div className="modal-overlay" onClick={() => setShowGraveyard(false)}>
+          <div className="modal-content methodology-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>The Graveyard</h3>
+              <span className="badge blocked">TERMINATED SUBS</span>
+            </div>
+
+            {graveyard.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '3rem 0', opacity: 0.5 }}>
+                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🪦</div>
+                No dead subscriptions... yet.
+              </div>
+            ) : (
+              <div className="graveyard-list">
+                {graveyard.map(item => (
+                  <div key={item.id} className="detail-row" style={{ padding: '1.5rem 0' }}>
+                    <div>
+                      <div style={{ fontWeight: 'bold', color: 'white', fontSize: '1.1rem' }}>{item.service}</div>
+                      <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '0.2rem' }}>
+                        Time of Death: {item.deathTime}<br />
+                        Final Entropy: <span style={{ color: '#ff3b30' }}>{item.entropy}</span>
+                      </div>
+                    </div>
+                    <button
+                      className="btn primary small"
+                      onClick={() => handleReinstate(item)}
+                      style={{ background: 'rgba(52, 199, 89, 0.1)', color: '#34c759', borderColor: '#34c759' }}
+                    >
+                      Reinstate
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="modal-actions" style={{ marginTop: '2rem' }}>
+              <button className="btn secondary" onClick={() => setShowGraveyard(false)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showMethodology && (
         <div className="modal-overlay" onClick={() => setShowMethodology(false)}>
