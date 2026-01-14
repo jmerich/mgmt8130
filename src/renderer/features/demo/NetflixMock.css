@@ -1,0 +1,235 @@
+/* Netflix Mock Styles */
+.netflix-mock {
+    background: #fff;
+    min-height: 100vh;
+    color: #333;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    position: relative;
+}
+
+.netflix-mock header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 3%;
+    border-bottom: 1px solid #e6e6e6;
+}
+
+.netflix-logo {
+    color: #e50914;
+    font-size: 2.5rem;
+    font-weight: bold;
+    letter-spacing: -2px;
+}
+
+.signin-link {
+    color: #333;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 1.2rem;
+}
+
+.checkout-container {
+    display: flex;
+    justify-content: center;
+    padding-top: 2rem;
+}
+
+.checkout-content {
+    max-width: 440px;
+    width: 100%;
+}
+
+.step-indicator {
+    font-size: 0.8rem;
+    color: #333;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.checkout-content h1 {
+    font-size: 2rem;
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+.payment-icons {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.payment-icons .icon {
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    color: #666;
+}
+
+.input-group {
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.input-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.input-row input {
+    width: 100%;
+}
+
+input {
+    width: 100%;
+    padding: 1rem;
+    border: 1px solid #8c8c8c;
+    border-radius: 2px;
+    font-size: 1rem;
+}
+
+input.autofilled {
+    background-color: #e8f0fe;
+    border-color: #00f3ff;
+    transition: all 0.5s ease;
+}
+
+.plan-info {
+    background: #f4f4f4;
+    padding: 1rem;
+    border-radius: 5px;
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.plan-row {
+    display: flex;
+    flex-direction: column;
+}
+
+.plan-row a {
+    color: #0071eb;
+    font-size: 0.9rem;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.plan-price {
+    font-weight: bold;
+}
+
+.terms {
+    font-size: 0.8rem;
+    color: #8c8c8c;
+    margin-bottom: 1.5rem;
+}
+
+.btn-netflix-primary {
+    width: 100%;
+    padding: 1rem;
+    background: #e50914;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn-netflix-primary:hover {
+    background: #f6121d;
+}
+
+/* Success View */
+.success-view {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.success-content {
+    margin-top: 4rem;
+}
+
+.check-mark {
+    font-size: 5rem;
+    color: #34c759;
+    margin-top: 2rem;
+    animation: scaleUp 0.5s ease-out;
+}
+
+@keyframes scaleUp {
+    from {
+        transform: scale(0);
+    }
+
+    to {
+        transform: scale(1);
+    }
+}
+
+/* SubGuard Overlay */
+.subguard-autofill-prompt {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 300px;
+    background: #0a0a0f;
+    border: 2px solid #00f3ff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 0 50px rgba(0, 243, 255, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    animation: slideIn 0.5s ease-out 0.5s backwards;
+    z-index: 1000;
+}
+
+.subguard-autofill-prompt:hover {
+    background: #16161f;
+    transform: scale(1.05);
+}
+
+.sg-logo-small {
+    font-size: 2rem;
+}
+
+.sg-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.sg-text strong {
+    color: #00f3ff;
+    font-size: 0.9rem;
+    margin-bottom: 0.2rem;
+}
+
+.sg-text span {
+    font-size: 0.75rem;
+    color: #ccc;
+    line-height: 1.2;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}

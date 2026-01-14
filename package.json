@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "concurrently \"npm run dev:renderer\" \"npm run dev:electron\"",
     "dev:renderer": "vite",
-    "dev:electron": "wait-on http://localhost:5173 && electron .",
-    "build": "tsc && vite build && electron-builder",
+    "dev:electron": "tsc -p tsconfig.electron.json && wait-on http://localhost:5173 && electron .",
+    "build": "tsc -p tsconfig.electron.json && tsc && vite build && electron-builder",
     "test": "vitest",
     "lint": "eslint src --ext .ts,.tsx"
   },
