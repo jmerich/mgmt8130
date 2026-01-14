@@ -154,27 +154,33 @@
     margin-bottom: 1rem;
 }
 
+/* Metric Tile - Dark by default for readability */
 .metric {
     flex: 1;
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 8px;
     padding: 0.8rem;
     text-align: center;
     transition: all 0.2s;
+    position: relative;
+    /* For Tooltip positioning */
+    cursor: help;
 }
 
+/* Hover: Subtle Outline Highlight */
 .metric:hover {
-    background: rgba(0, 0, 0, 0.5);
-    border-color: rgba(255, 255, 255, 0.2);
+    border-color: rgba(0, 243, 255, 0.5);
+    /* Neon Blue highlight */
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+    transform: translateY(-2px);
 }
 
 .metric-label {
     font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 1px;
-    color: #aaa;
-    /* Increased contrast from #666 */
+    color: #bbb;
     margin-bottom: 0.3rem;
     display: block;
 }
@@ -183,7 +189,33 @@
     font-size: 1.1rem;
     font-weight: 600;
     color: #fff;
-    /* Inteased contrast from #ccc */
+}
+
+/* Tooltip Implementation */
+.metric::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-10px);
+    background: #000;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    padding: 0.5rem 0.8rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.2s ease;
+    z-index: 10;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    font-weight: normal;
+}
+
+.metric:hover::after {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-5px);
 }
 
 /* The AI Insight Text */

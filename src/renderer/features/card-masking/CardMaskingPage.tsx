@@ -357,11 +357,11 @@ export function CardMaskingPage() {
                 <span className="node-price">$19.99/mo</span>
               </div>
               <div className="node-metrics">
-                <div className="metric">
+                <div className="metric" data-tooltip="Utilization vs Cost ratio">
                   <span className="metric-label">Efficiency</span>
                   <span className="metric-value">98%</span>
                 </div>
-                <div className="metric">
+                <div className="metric" data-tooltip="Cost Per Dopamine hit">
                   <span className="metric-label">CPD (Dopamine)</span>
                   <span className="metric-value">$0.04</span>
                 </div>
@@ -384,11 +384,11 @@ export function CardMaskingPage() {
               <span className="node-price">$11.99/mo</span>
             </div>
             <div className="node-metrics">
-              <div className="metric">
+              <div className="metric" data-tooltip="Utilization vs Cost ratio">
                 <span className="metric-label">Efficiency</span>
                 <span className="metric-value">84%</span>
               </div>
-              <div className="metric">
+              <div className="metric" data-tooltip="Cost Per Dopamine hit">
                 <span className="metric-label">CPD (Dopamine)</span>
                 <span className="metric-value">$0.01</span>
               </div>
@@ -410,11 +410,11 @@ export function CardMaskingPage() {
               <span className="node-price">$54.99/mo</span>
             </div>
             <div className="node-metrics">
-              <div className="metric">
+              <div className="metric" data-tooltip="Utilization vs Cost ratio">
                 <span className="metric-label">Efficiency</span>
                 <span className="metric-value">{adobeStatus === 'zombie' ? '4%' : '0%'}</span>
               </div>
-              <div className="metric">
+              <div className="metric" data-tooltip="Current subscription state">
                 <span className="metric-label">Status</span>
                 <span className="metric-value">{adobeStatus === 'zombie' ? 'Active' : 'Terminated'}</span>
               </div>
