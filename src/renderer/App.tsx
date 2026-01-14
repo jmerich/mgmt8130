@@ -121,7 +121,7 @@ function Dashboard() {
   React.useEffect(() => {
     const fetchExtensionData = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/extension/data');
+        const response = await fetch('/api/extension/data');
         if (response.ok) {
           const data = await response.json();
           setExtensionData(data);
@@ -141,7 +141,7 @@ function Dashboard() {
   React.useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/autonomy/settings');
+        const response = await fetch('/api/autonomy/settings');
         if (response.ok) {
           const data = await response.json();
           if (data.settings) {
@@ -159,7 +159,7 @@ function Dashboard() {
   const saveAutonomySettings = async (newSettings: AutonomySettings) => {
     setAutonomySettings(newSettings);
     try {
-      await fetch('http://localhost:3001/api/autonomy/settings', {
+      await fetch('/api/autonomy/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ settings: newSettings })

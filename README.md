@@ -140,12 +140,23 @@ curl -X POST http://localhost:3001/api/autonomy/settings \
    - **Red overlay**: Checkout blocked
    - **Amber overlay**: Cooling-off period active
 
-### 3. Trigger Interventions
-To see interventions in action:
+### 3. Checkout Blocking Demo
+To see checkout blocking in action:
+1. Set autonomy to **"Full"** in the dashboard
+2. Set **"Block Checkout Above"** to $1
+3. Go to Target.com and add an item to cart
+4. Click **"Sign in to check out"** button
+5. The extension will block the click and show a red overlay with:
+   - "Checkout Blocked" message
+   - Reason for blocking
+   - "Go Back to Shopping" and "View Dashboard" buttons
+
+### 4. Trigger Time/Spend Limits
+To see other interventions:
 - Set a low daily spending limit ($10)
 - Set max shopping time to 1 minute
 - Browse shopping sites to trigger time limit
-- Try to checkout a high-priced item to trigger block
+- The extension will show appropriate overlays
 
 ## Features Overview
 
@@ -175,6 +186,19 @@ Real-time shopping behavior analysis:
 - Calculates purchase risk levels
 - Enforces AI autonomy settings
 - Tracks time spent shopping
+
+#### Checkout Interception
+The extension intercepts checkout buttons **before** you reach the payment form:
+- Detects buttons like "Checkout", "Sign in to check out", "Buy now", "Proceed to checkout"
+- Blocks the click immediately and checks your autonomy settings
+- Shows a blocking overlay explaining why the purchase was blocked
+- Works on major retailers: Target, Amazon, Walmart, Best Buy, etc.
+
+#### Blocking Overlays
+When autonomy rules are triggered, you'll see:
+- **Red overlay (Checkout Blocked)**: Daily spending limit exceeded or price threshold reached
+- **Amber overlay (Cooling-Off Period)**: Mandatory wait time with reflection prompts
+- **Purple overlay (Redirect)**: AI is redirecting you away from shopping (full autonomy mode)
 
 ## Tech Stack
 
@@ -220,6 +244,16 @@ lsof -ti:5173 -ti:3001 | xargs kill -9
 - The extension detects major retailers (Amazon, eBay, Target, Walmart, etc.)
 - Check the console for detection logs
 - Refresh the page after installing the extension
+
+### Extension Not Blocking Checkouts
+1. Make sure autonomy is set to **"High"** or **"Full"** in the dashboard
+2. Set "Block Checkout Above" to a low value (e.g., $1) for testing
+3. Reload the extension in `chrome://extensions/` (click refresh icon)
+4. Refresh the shopping page
+5. Open DevTools (F12) and check console for `[SubGuard] CHECKOUT BUTTON DETECTED!`
+
+### "Extension context invalidated" Errors
+These errors appear when you reload the extension - they're harmless. Just refresh the shopping page after reloading the extension.
 
 ---
 

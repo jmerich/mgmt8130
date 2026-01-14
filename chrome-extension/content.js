@@ -91,14 +91,35 @@
 
   // Handle autonomy decision
   function handleAutonomyDecision(decision) {
-    console.log('[SubGuard] Autonomy decision:', decision);
+    console.log('[SubGuard] Handling autonomy decision:', decision);
 
-    if (decision.action === 'redirect_away') {
-      showRedirectOverlay(decision);
-    } else if (decision.action === 'block_checkout') {
-      showBlockOverlay(decision);
-    } else if (decision.action === 'require_cooloff') {
-      showCooloffOverlay(decision);
+    try {
+      // Remove any existing overlay first
+      const existingOverlay = document.getElementById('subguard-autonomy-overlay');
+      if (existingOverlay) existingOverlay.remove();
+      overlayVisible = false;
+
+      if (decision.action === 'redirect_away') {
+        console.log('[SubGuard] Showing redirect overlay');
+        showRedirectOverlay(decision);
+      } else if (decision.action === 'block_checkout') {
+        console.log('[SubGuard] Showing block overlay');
+        showBlockOverlay(decision);
+      } else if (decision.action === 'require_cooloff') {
+        console.log('[SubGuard] Showing cooloff overlay');
+        showCooloffOverlay(decision);
+      } else {
+        // Unknown action - show a generic block
+        console.log('[SubGuard] Unknown action, showing generic block');
+        showBlockOverlay({
+          ...decision,
+          message: decision.message || 'SubGuard has blocked this action to protect your financial goals.'
+        });
+      }
+    } catch (error) {
+      console.error('[SubGuard] Error showing overlay:', error);
+      // Show a simple alert as fallback
+      alert(`SubGuard Blocked: ${decision.message || decision.reason || 'Purchase blocked'}`);
     }
   }
 
@@ -191,29 +212,58 @@
     const overlay = createElement('div');
     overlay.id = 'subguard-autonomy-overlay';
     overlay.className = 'subguard-block-overlay';
+    // Add inline styles as fallback
+    overlay.style.cssText = 'position:fixed!important;top:0!important;left:0!important;width:100vw!important;height:100vh!important;background:rgba(0,0,0,0.95)!important;z-index:2147483647!important;display:flex!important;align-items:center!important;justify-content:center!important;font-family:system-ui,sans-serif!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;';
 
     const modal = createElement('div', 'subguard-autonomy-modal');
+    modal.style.cssText = 'background:linear-gradient(145deg,#1a1a2e,#16213e);border-radius:24px;width:90%;max-width:520px;padding:0;box-shadow:0 30px 100px rgba(239,68,68,0.4);color:white;text-align:center;';
 
     const header = createElement('div', 'autonomy-header');
-    header.appendChild(createElement('div', 'autonomy-icon', '\uD83D\uDEAB'));
-    header.appendChild(createElement('h2', null, 'Checkout Blocked'));
+    header.style.cssText = 'padding:30px 24px 20px;background:linear-gradient(135deg,rgba(239,68,68,0.2),rgba(185,28,28,0.2));border-bottom:1px solid rgba(255,255,255,0.1);';
+
+    const icon = createElement('div', 'autonomy-icon', '\uD83D\uDEAB');
+    icon.style.cssText = 'font-size:48px;margin-bottom:10px;';
+    header.appendChild(icon);
+
+    const title = createElement('h2', null, 'Checkout Blocked');
+    title.style.cssText = 'margin:0;font-size:24px;color:white;';
+    header.appendChild(title);
     modal.appendChild(header);
 
     const message = createElement('div', 'autonomy-message');
-    message.appendChild(createElement('p', 'autonomy-reason', decision.message));
-    message.appendChild(createElement('p', null, 'This is helping you stick to your financial goals.'));
+    message.style.cssText = 'padding:24px;';
+
+    const reason = createElement('p', 'autonomy-reason', decision.message);
+    reason.style.cssText = 'font-size:16px;color:#f87171;margin:0 0 12px 0;font-weight:500;';
+    message.appendChild(reason);
+
+    const helpText = createElement('p', null, 'This is helping you stick to your financial goals.');
+    helpText.style.cssText = 'font-size:14px;color:rgba(255,255,255,0.7);margin:0;';
+    message.appendChild(helpText);
     modal.appendChild(message);
 
     const actions = createElement('div', 'autonomy-actions');
+    actions.style.cssText = 'padding:0 24px 24px;display:flex;gap:12px;flex-direction:column;';
+
     const backBtn = createElement('button', 'autonomy-btn accept', 'Go Back to Shopping');
+    backBtn.style.cssText = 'padding:14px 24px;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;background:linear-gradient(135deg,#22c55e,#16a34a);color:white;';
+
     const dashboardBtn = createElement('button', 'autonomy-btn secondary', 'View Dashboard');
+    dashboardBtn.style.cssText = 'padding:14px 24px;border:1px solid rgba(255,255,255,0.2);border-radius:12px;font-size:16px;cursor:pointer;background:transparent;color:white;';
+
     actions.appendChild(backBtn);
     actions.appendChild(dashboardBtn);
     modal.appendChild(actions);
 
     overlay.appendChild(modal);
-    document.body.appendChild(overlay);
-    overlayVisible = true;
+
+    // Use setTimeout to ensure it shows after any page scripts run
+    setTimeout(() => {
+      // Try documentElement first, then body
+      (document.documentElement || document.body).appendChild(overlay);
+      overlayVisible = true;
+      console.log('[SubGuard] Block overlay shown!');
+    }, 50);
 
     backBtn.addEventListener('click', () => {
       overlay.remove();
@@ -678,13 +728,136 @@
 
   // Setup event listeners
   function setupEventListeners() {
-    document.addEventListener('click', (e) => {
-      const target = e.target;
-      const text = target.textContent?.toLowerCase() || '';
-      const className = target.className?.toLowerCase() || '';
+    // Intercept checkout button clicks BEFORE they happen
+    document.addEventListener('click', async (e) => {
+      const target = e.target.closest('button, a, [role="button"], input[type="submit"]') || e.target;
+      const text = (target.textContent || '').toLowerCase();
+      // Handle className being SVGAnimatedString or regular string
+      const rawClassName = target.className;
+      const className = (typeof rawClassName === 'string' ? rawClassName : rawClassName?.baseVal || '').toLowerCase();
+      const id = (target.id || '').toLowerCase();
+      const href = (target.href || '').toLowerCase();
 
+      // Detect checkout/proceed buttons - be aggressive!
+      const isCheckoutButton =
+        text.includes('checkout') ||
+        text.includes('check out') ||
+        text.includes('sign in to') ||
+        text.includes('proceed') ||
+        text.includes('place order') ||
+        text.includes('place your order') ||
+        text.includes('complete purchase') ||
+        text.includes('complete order') ||
+        text.includes('buy now') ||
+        text.includes('buy it now') ||
+        text.includes('submit order') ||
+        text.includes('pay now') ||
+        text.includes('pay $') ||
+        text.includes('continue to payment') ||
+        text.includes('continue to checkout') ||
+        text.includes('go to checkout') ||
+        text.includes('view cart') ||
+        text.includes('view bag') ||
+        text.includes('start checkout') ||
+        className.includes('checkout') ||
+        className.includes('proceed') ||
+        className.includes('buy-now') ||
+        className.includes('place-order') ||
+        id.includes('checkout') ||
+        id.includes('buy-now') ||
+        id.includes('place-order') ||
+        href.includes('checkout') ||
+        href.includes('/buy/') ||
+        href.includes('/cart') ||
+        href.includes('/basket') ||
+        href.includes('/bag') ||
+        target.getAttribute('data-action')?.includes('checkout') ||
+        target.getAttribute('name')?.includes('checkout');
+
+      if (isCheckoutButton) {
+        console.log('[SubGuard] CHECKOUT BUTTON DETECTED! Text:', text.slice(0, 50));
+
+        // BLOCK IMMEDIATELY - prevent the click from going through
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+
+        console.log('[SubGuard] Click blocked, checking with API...');
+
+        // Check with autonomy API via background script (avoids CORS)
+        try {
+          // Get price from page, or use a default high value to trigger block
+          let currentPrice = pageAnalysis?.prices?.length > 0 ? Math.max(...pageAnalysis.prices) : 0;
+
+          // If no price detected but we're on a checkout, assume it's above threshold
+          if (currentPrice === 0) {
+            currentPrice = 9999; // Force block check when price unknown
+          }
+
+          console.log('[SubGuard] Sending autonomy check to background...');
+
+          // Use chrome.runtime.sendMessage to proxy through background script
+          const decision = await chrome.runtime.sendMessage({
+            type: 'API_AUTONOMY_CHECK',
+            data: {
+              action: 'checkout',
+              context: {
+                totalSpentToday: sessionData.pricesViewed.reduce((a, b) => a + b, 0),
+                timeOnShoppingSites: sessionData.timeOnShoppingSites,
+                currentPrice: currentPrice,
+                riskLevel: pageAnalysis?.riskLevel || 'medium'
+              }
+            }
+          });
+
+          console.log('[SubGuard] API decision:', decision);
+
+          if (decision && !decision.allow) {
+            // Show blocking overlay
+            console.log('[SubGuard] BLOCKING checkout:', decision.reason);
+            handleAutonomyDecision(decision);
+
+            // Report blocked checkout
+            try {
+              chrome.runtime.sendMessage({
+                type: 'CHECKOUT_BLOCKED',
+                data: { url: window.location.href, reason: decision.reason, price: currentPrice }
+              });
+            } catch(err) {}
+
+            return false;
+          } else {
+            // API says OK - let user proceed by simulating click on original target
+            console.log('[SubGuard] Checkout ALLOWED, proceeding...');
+            // Navigate manually since we blocked the original click
+            if (target.href) {
+              window.location.href = target.href;
+            } else if (target.form) {
+              target.form.submit();
+            } else {
+              // Try clicking again without our handler
+              target.dataset.subguardAllowed = 'true';
+              target.click();
+            }
+          }
+        } catch (error) {
+          console.log('[SubGuard] Autonomy check failed:', error);
+          // On error, allow through
+          if (target.href) window.location.href = target.href;
+        }
+
+        return false;
+      }
+
+      // Skip if we already allowed this click
+      if (target.dataset?.subguardAllowed === 'true') {
+        delete target.dataset.subguardAllowed;
+        return true;
+      }
+
+      // Track add to cart clicks
       if (text.includes('add to cart') || text.includes('add to bag') ||
-          text.includes('buy now') || className.includes('add-to-cart')) {
+          className.includes('add-to-cart')) {
         sessionData.cartInteractions++;
         chrome.runtime.sendMessage({
           type: 'CART_INTERACTION',
@@ -694,9 +867,40 @@
       }
     }, true);
 
-    document.addEventListener('submit', (e) => {
+    document.addEventListener('submit', async (e) => {
       const form = e.target;
       if (form.action?.includes('checkout') || form.action?.includes('payment')) {
+        // Also check form submissions
+        try {
+          const currentPrice = pageAnalysis?.prices?.length > 0 ? Math.max(...pageAnalysis.prices) : 0;
+
+          const response = await fetch(`${SUBGUARD_API}/autonomy/check`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'checkout',
+              context: {
+                totalSpentToday: sessionData.pricesViewed.reduce((a, b) => a + b, 0),
+                timeOnShoppingSites: sessionData.timeOnShoppingSites,
+                currentPrice: currentPrice,
+                riskLevel: pageAnalysis?.riskLevel || 'medium'
+              }
+            })
+          });
+
+          if (response.ok) {
+            const decision = await response.json();
+            if (!decision.allow) {
+              e.preventDefault();
+              e.stopPropagation();
+              handleAutonomyDecision(decision);
+              return false;
+            }
+          }
+        } catch (error) {
+          console.log('[SubGuard] Form autonomy check failed');
+        }
+
         chrome.runtime.sendMessage({
           type: 'CHECKOUT_ATTEMPT',
           data: { url: window.location.href, timestamp: Date.now() }
@@ -727,13 +931,18 @@
     });
 
     setInterval(() => {
-      if (pageAnalysis?.isShoppingSite) {
-        sessionData.timeOnShoppingSites += 5;
+      try {
+        if (!chrome.runtime?.id) return; // Extension context invalidated
+        if (pageAnalysis?.isShoppingSite && sessionData) {
+          sessionData.timeOnShoppingSites += 5;
+        }
+        chrome.runtime.sendMessage({
+          type: 'SESSION_UPDATE',
+          session: sessionData
+        });
+      } catch (e) {
+        // Extension was reloaded, ignore
       }
-      chrome.runtime.sendMessage({
-        type: 'SESSION_UPDATE',
-        session: sessionData
-      });
     }, 5000);
   }
 

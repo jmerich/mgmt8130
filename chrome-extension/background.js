@@ -155,8 +155,38 @@ async function handleMessage(message, sender) {
     case 'SYNC_WITH_APP':
       return syncWithApp();
 
+    case 'API_AUTONOMY_CHECK':
+      return proxyAutonomyCheck(data);
+
+    case 'CHECKOUT_BLOCKED':
+      aggregatedData.dailyStats.purchasesPrevented++;
+      await saveData();
+      return { success: true };
+
     default:
       return { success: false, error: 'Unknown message type' };
+  }
+}
+
+// Proxy autonomy check through background script (avoids CORS)
+async function proxyAutonomyCheck(data) {
+  try {
+    const response = await fetch(`${SUBGUARD_API_URL}/autonomy/check`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+
+    if (response.ok) {
+      const decision = await response.json();
+      console.log('[SubGuard] Autonomy check result:', decision);
+      return decision;
+    } else {
+      return { allow: true, error: 'API error' };
+    }
+  } catch (error) {
+    console.log('[SubGuard] Autonomy check failed:', error);
+    return { allow: true, error: 'Network error' };
   }
 }
 
