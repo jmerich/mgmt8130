@@ -1,17 +1,8 @@
-/**
- * CARD MASKING FEATURE
- * Owner: [Team Member 2]
- *
- * This module handles:
- * - Generating virtual/masked cards
- * - One-time use cards for trial signups
- * - Merchant-locked cards for subscriptions
- * - Card lifecycle management
- */
 
 import React, { useState, useEffect } from 'react';
 import type { VirtualCard, CardGenerationOptions } from '../../shared/types';
 import { cardMaskingService } from '../../services/stub-service';
+import { useToast } from '../../components/Toast';
 import './CardMasking.css';
 
 export function CardMaskingPage() {
@@ -19,6 +10,7 @@ export function CardMaskingPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showGenerator, setShowGenerator] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const { showToast } = useToast();
 
   const [feedItems, setFeedItems] = useState([
     { id: 2, type: 'auto', time: '2h ago', service: 'Adobe Creative Cloud', action: 'trial started', badge: 'Auto-Generated Virtual Card', badgeClass: 'generated' },
@@ -40,11 +32,11 @@ export function CardMaskingPage() {
       if (isAdded) {
         // Remove logic
         setActiveWallets(prev => prev.filter(w => w !== wallet));
-        setWalletSuccess(`${wallet} Removed`); // Re-using toast for simplicity
+        setWalletSuccess(`${wallet} Removed`);
       } else {
         // Add logic
         setActiveWallets(prev => [...prev, wallet]);
-        setWalletSuccess(wallet); // "Card added to..." handled in render
+        setWalletSuccess(wallet);
       }
 
       setTimeout(() => setWalletSuccess(null), 3000);
@@ -119,14 +111,13 @@ export function CardMaskingPage() {
       const newCard = await cardMaskingService.generateCard(options);
       setCards([newCard, ...cards]);
       setShowGenerator(false);
+      showToast('Virtual card generated!', 'success', '💳');
     } catch (error) {
       console.error('Failed to generate card:', error);
     } finally {
       setIsGenerating(false);
     }
   }
-
-
 
   if (isLoading) {
     return <div className="loading">Loading cards...</div>;
@@ -435,12 +426,9 @@ export function CardMaskingPage() {
         </div>
       )}
 
-
     </div>
   );
 }
-
-
 
 interface CardGeneratorProps {
   onGenerate: (options: CardGenerationOptions) => void;
@@ -555,5 +543,3 @@ function CardGenerator({ onGenerate, onCancel, isGenerating }: CardGeneratorProp
     </form>
   );
 }
-
-

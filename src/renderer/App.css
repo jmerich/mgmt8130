@@ -112,6 +112,74 @@
   color: #666;
 }
 
+.feature-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Savings Hero Section */
+.savings-hero {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  color: white;
+  padding: 2rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+}
+
+.savings-total {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.savings-label {
+  display: block;
+  font-size: 0.9rem;
+  opacity: 0.8;
+  margin-bottom: 0.5rem;
+}
+
+.savings-amount {
+  font-size: 3.5rem;
+  font-weight: 700;
+  background: linear-gradient(90deg, #4caf50, #8bc34a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.savings-breakdown {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.savings-item {
+  text-align: center;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}
+
+.savings-icon {
+  display: block;
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.savings-stat {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #4caf50;
+}
+
+.savings-desc {
+  display: block;
+  font-size: 0.8rem;
+  opacity: 0.7;
+  margin-top: 0.25rem;
+}
+
 /* Buttons */
 .btn {
   display: inline-block;
