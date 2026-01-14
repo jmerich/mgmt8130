@@ -156,8 +156,8 @@
 
 .metric {
     flex: 1;
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 8px;
     padding: 0.8rem;
     text-align: center;
@@ -165,15 +165,16 @@
 }
 
 .metric:hover {
-    background: rgba(0, 0, 0, 0.4);
-    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.5);
+    border-color: rgba(255, 255, 255, 0.2);
 }
 
 .metric-label {
     font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 1px;
-    color: #666;
+    color: #aaa;
+    /* Increased contrast from #666 */
     margin-bottom: 0.3rem;
     display: block;
 }
@@ -181,7 +182,8 @@
 .metric-value {
     font-size: 1.1rem;
     font-weight: 600;
-    color: #ccc;
+    color: #fff;
+    /* Inteased contrast from #ccc */
 }
 
 /* The AI Insight Text */
