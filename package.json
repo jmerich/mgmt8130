@@ -5,6 +5,7 @@
   "main": "dist/electron/main.js",
   "scripts": {
     "dev": "concurrently \"npm run dev:renderer\" \"npm run dev:electron\" \"npm run dev:api\"",
+    "dev:web": "concurrently -n \"app,api\" -c \"cyan,yellow\" \"npm run dev:renderer\" \"npm run dev:api\"",
     "dev:renderer": "vite",
     "dev:electron": "tsc -p tsconfig.electron.json && wait-on http://localhost:5173 && electron .",
     "dev:api": "node src/api-server.js",
