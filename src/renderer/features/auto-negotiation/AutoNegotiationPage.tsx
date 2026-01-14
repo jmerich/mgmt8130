@@ -11,7 +11,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import type { Subscription, NegotiationSession } from '../../shared/types';
+import type { Subscription } from '../../shared/types';
 import { autoNegotiationService } from '../../services/stub-service';
 import { useToast } from '../../components/Toast';
 import './AutoNegotiation.css';
@@ -48,19 +48,28 @@ const NEGOTIATION_SCRIPTS: Record<string, Array<{ role: 'ai' | 'rep'; message: s
   ],
 };
 
+interface NegotiationState {
+  subscription: Subscription;
+  messages: Array<{ role: 'ai' | 'rep'; message: string }>;
+  status: 'chatting' | 'success' | 'failed';
+  discount?: number;
+}
+
 export function AutoNegotiationPage() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
-  const [activeNegotiation, setActiveNegotiation] = useState<{
-    subscription: Subscription;
-    messages: Array<{ role: 'ai' | 'rep'; message: string }>;
-    status: 'chatting' | 'success' | 'failed';
-    discount?: number;
-  } | null>(null);
+  const [negotiatedDiscounts, setNegotiatedDiscounts] = useState<Record<string, number>>({});
+  const [activeNegotiation, setActiveNegotiation] = useState<NegotiationState | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const { showToast } = useToast();
 
   useEffect(() => {
     loadSubscriptions();
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
   }, []);
 
   async function loadSubscriptions() {
@@ -84,41 +93,73 @@ export function AutoNegotiationPage() {
       status: 'chatting',
     });
 
+    // Clear any existing interval
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
     // Animate messages one by one
     let index = 0;
-    const interval = setInterval(() => {
+    intervalRef.current = setInterval(() => {
       if (index >= script.length) {
-        clearInterval(interval);
-        // Determine outcome
-        const success = Math.random() > 0.2; // 80% success rate
-        const discount = success ? Math.floor(15 + Math.random() * 20) : 0;
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
 
-        setActiveNegotiation((prev) => prev ? {
-          ...prev,
-          status: success ? 'success' : 'failed',
-          discount,
-        } : null);
+        // Determine outcome - always succeed for demo
+        const success = true;
+        const discount = Math.floor(15 + Math.random() * 20);
+
+        setActiveNegotiation((prev) => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            status: success ? 'success' : 'failed',
+            discount,
+          };
+        });
 
         if (success) {
+          // Save the discount
+          setNegotiatedDiscounts((prev) => ({
+            ...prev,
+            [subscription.id]: discount,
+          }));
           showToast(`Negotiation successful! ${discount}% discount secured.`, 'success', '🎉');
         }
         return;
       }
 
-      setActiveNegotiation((prev) => prev ? {
-        ...prev,
-        messages: [...prev.messages, script[index]],
-      } : null);
+      setActiveNegotiation((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          messages: [...prev.messages, script[index]],
+        };
+      });
       index++;
     }, 1500);
   }
 
   function closeNegotiation() {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
     setActiveNegotiation(null);
   }
 
-  const totalMonthly = subscriptions.reduce((sum, sub) => sum + sub.currentPrice, 0);
-  const potentialSavings = totalMonthly * 0.2;
+  // Calculate totals with discounts applied
+  const totalMonthly = subscriptions.reduce((sum, sub) => {
+    const discount = negotiatedDiscounts[sub.id] || 0;
+    const discountedPrice = sub.currentPrice * (1 - discount / 100);
+    return sum + discountedPrice;
+  }, 0);
+
+  const originalTotal = subscriptions.reduce((sum, sub) => sum + sub.currentPrice, 0);
+  const totalSavings = originalTotal - totalMonthly;
+  const potentialSavings = (originalTotal - totalSavings) * 0.2;
 
   if (isLoading) {
     return <div className="loading">Loading subscriptions...</div>;
@@ -139,12 +180,12 @@ export function AutoNegotiationPage() {
           <span className="stat-label">Monthly Spend</span>
         </div>
         <div className="stat">
-          <span className="stat-value">{subscriptions.length}</span>
-          <span className="stat-label">Active Subscriptions</span>
+          <span className="stat-value">${totalSavings.toFixed(2)}</span>
+          <span className="stat-label">Monthly Savings</span>
         </div>
         <div className="stat highlight">
           <span className="stat-value">~${potentialSavings.toFixed(2)}</span>
-          <span className="stat-label">Potential Savings/mo</span>
+          <span className="stat-label">More Potential Savings</span>
         </div>
       </div>
 
@@ -165,6 +206,7 @@ export function AutoNegotiationPage() {
             <SubscriptionCard
               key={subscription.id}
               subscription={subscription}
+              discount={negotiatedDiscounts[subscription.id]}
               onNegotiate={() => startNegotiation(subscription)}
               isNegotiating={activeNegotiation?.subscription.id === subscription.id}
             />
@@ -176,12 +218,7 @@ export function AutoNegotiationPage() {
 }
 
 interface NegotiationChatProps {
-  negotiation: {
-    subscription: Subscription;
-    messages: Array<{ role: 'ai' | 'rep'; message: string }>;
-    status: 'chatting' | 'success' | 'failed';
-    discount?: number;
-  };
+  negotiation: NegotiationState;
   onClose: () => void;
 }
 
@@ -232,13 +269,13 @@ function NegotiationChat({ negotiation, onClose }: NegotiationChatProps) {
           <div ref={messagesEndRef} />
         </div>
 
-        {negotiation.status === 'success' && (
+        {negotiation.status === 'success' && negotiation.discount && (
           <div className="negotiation-result success">
             <div className="result-icon">🎉</div>
             <h4>Negotiation Successful!</h4>
             <p className="discount-amount">{negotiation.discount}% discount secured</p>
             <p className="savings-detail">
-              You'll save ${((negotiation.subscription.currentPrice * (negotiation.discount || 0)) / 100).toFixed(2)}/month
+              You'll save ${((negotiation.subscription.currentPrice * negotiation.discount) / 100).toFixed(2)}/month
             </p>
             <button className="btn primary" onClick={onClose}>Done</button>
           </div>
@@ -259,13 +296,19 @@ function NegotiationChat({ negotiation, onClose }: NegotiationChatProps) {
 
 interface SubscriptionCardProps {
   subscription: Subscription;
+  discount?: number;
   onNegotiate: () => void;
   isNegotiating: boolean;
 }
 
-function SubscriptionCard({ subscription, onNegotiate, isNegotiating }: SubscriptionCardProps) {
+function SubscriptionCard({ subscription, discount, onNegotiate, isNegotiating }: SubscriptionCardProps) {
+  const hasDiscount = discount && discount > 0;
+  const discountedPrice = hasDiscount
+    ? subscription.currentPrice * (1 - discount / 100)
+    : subscription.currentPrice;
+
   return (
-    <div className="subscription-card">
+    <div className={`subscription-card ${hasDiscount ? 'has-discount' : ''}`}>
       <div className="subscription-icon">
         {getServiceIcon(subscription.serviceName)}
       </div>
@@ -275,9 +318,17 @@ function SubscriptionCard({ subscription, onNegotiate, isNegotiating }: Subscrip
         <span className="subscription-category">{subscription.category}</span>
 
         <div className="pricing">
-          <span className="current-price">
-            ${subscription.currentPrice}/{subscription.billingCycle === 'monthly' ? 'mo' : 'yr'}
-          </span>
+          {hasDiscount ? (
+            <>
+              <span className="original-price">${subscription.currentPrice.toFixed(2)}</span>
+              <span className="discounted-price">${discountedPrice.toFixed(2)}</span>
+              <span className="discount-badge">-{discount}%</span>
+            </>
+          ) : (
+            <span className="current-price">
+              ${subscription.currentPrice}/{subscription.billingCycle === 'monthly' ? 'mo' : 'yr'}
+            </span>
+          )}
         </div>
 
         <div className="next-billing">
@@ -291,6 +342,8 @@ function SubscriptionCard({ subscription, onNegotiate, isNegotiating }: Subscrip
             <div className="spinner small"></div>
             <span>Negotiating...</span>
           </div>
+        ) : hasDiscount ? (
+          <div className="success-badge">✓ Discount Applied</div>
         ) : subscription.negotiationEligible ? (
           <button className="btn primary" onClick={onNegotiate}>
             🤝 Negotiate Price
