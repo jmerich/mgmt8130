@@ -188,7 +188,9 @@
 .metric-value {
     font-size: 1.1rem;
     font-weight: 600;
-    color: #fff;
+    color: #00f3ff;
+    /* Neon Blue */
+    text-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
 }
 
 /* Tooltip Implementation */
