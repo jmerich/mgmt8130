@@ -34,8 +34,21 @@
 
   const SUBGUARD_API = 'http://localhost:3001/api';
 
+  // Check if we're on the SubGuard dashboard - don't interfere with it
+  function isSubGuardDashboard() {
+    const hostname = window.location.hostname;
+    const port = window.location.port;
+    return hostname === 'localhost' && (port === '5173' || port === '3001');
+  }
+
   // Initialize
   function init() {
+    // Skip initialization on SubGuard dashboard
+    if (isSubGuardDashboard()) {
+      console.log('[SubGuard] Skipping on dashboard');
+      return;
+    }
+
     console.log('[SubGuard] Content script initialized');
     fetchAutonomySettings();
     analyzePage();
