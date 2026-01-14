@@ -13,6 +13,29 @@ export function CardMaskingPage() {
   const [showGenerator, setShowGenerator] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const { showToast } = useToast();
+  const [adobeStatus, setAdobeStatus] = useState<'safe' | 'zombie' | 'cancelling' | 'terminated'>('zombie');
+
+  const handleAutoCancel = () => {
+    setAdobeStatus('cancelling');
+
+    // Simulate API call / Agent negotiation
+    setTimeout(() => {
+      setAdobeStatus('terminated');
+      showToast('Subscription Terminated: Adobe Creative Cloud', 'success', '🛡️');
+
+      // Add log to feed
+      const newLog = {
+        id: Date.now(),
+        type: 'auto',
+        time: 'Just now',
+        service: 'Adobe Creative Cloud',
+        action: 'automatically terminated',
+        badge: 'Entropy Reduced',
+        badgeClass: 'generated'
+      };
+      setFeedItems(prev => [newLog, ...prev]);
+    }, 2000);
+  };
 
   const [feedItems, setFeedItems] = useState([
     { id: 2, type: 'auto', time: '2h ago', service: 'Adobe Creative Cloud', action: 'trial started', badge: 'Auto-Generated Virtual Card', badgeClass: 'generated' },
@@ -354,8 +377,9 @@ export function CardMaskingPage() {
             </div>
           </div>
 
+
           <div className="smart-node">
-            <div className="entropy-orb pulse-zombie"></div>
+            <div className={`entropy-orb ${adobeStatus === 'safe' ? 'pulse-stable' : adobeStatus === 'zombie' ? 'pulse-zombie' : 'pulse-dead'}`}></div>
             <div className="node-header">
               <span className="node-service">Adobe Creative</span>
               <span className="node-price">$54.99/mo</span>
@@ -363,21 +387,41 @@ export function CardMaskingPage() {
             <div className="node-metrics">
               <div className="metric">
                 <span className="metric-label">Efficiency</span>
-                <span className="metric-value">4%</span>
+                <span className="metric-value">{adobeStatus === 'zombie' ? '4%' : '0%'}</span>
               </div>
               <div className="metric">
-                <span className="metric-label">Cost / Use</span>
-                <span className="metric-value">$54.00</span>
+                <span className="metric-label">Status</span>
+                <span className="metric-value">{adobeStatus === 'zombie' ? 'Active' : 'Terminated'}</span>
               </div>
             </div>
-            <div className="ai-insight insight-zombie">
-              <strong>Verdict: ZOMBIE DETECTED</strong><br />
-              Opened once in 28 days. Logic suggests immediate termination.
-              <br /><br />
-              <button className="btn danger" style={{ width: '100%', fontSize: '0.8rem' }}>AUTO-CANCEL NOW</button>
-            </div>
+
+            {adobeStatus === 'zombie' ? (
+              <div className="ai-insight insight-zombie">
+                <strong>Verdict: ZOMBIE DETECTED</strong><br />
+                Opened once in 28 days. Logic suggests immediate termination.
+                <br /><br />
+                <button
+                  className="btn danger"
+                  style={{ width: '100%', fontSize: '0.8rem' }}
+                  onClick={handleAutoCancel}
+                >
+                  AUTO-CANCEL NOW
+                </button>
+              </div>
+            ) : adobeStatus === 'cancelling' ? (
+              <div className="ai-insight insight-stable">
+                <strong>Initiating Protocol...</strong><br />
+                Negotiating cancellation with vendor...
+              </div>
+            ) : (
+              <div className="ai-insight insight-stable" style={{ borderColor: '#34c759' }}>
+                <strong style={{ color: '#34c759' }}>✓ TERMINATION COMPLETE</strong><br />
+                $54.99/mo saved. Entropy neutralized.
+              </div>
+            )}
+
             <div className="entropy-score">
-              ENTROPY: 99.8 (CRITICAL)
+              ENTROPY: {adobeStatus === 'zombie' ? '99.8 (CRITICAL)' : '0.0 (NEUTRALIZED)'}
             </div>
           </div>
         </div>
