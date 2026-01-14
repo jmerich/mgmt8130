@@ -28,6 +28,7 @@ export function CardMaskingPage() {
   const [provisioning, setProvisioning] = useState<string | null>(null);
   const [walletSuccess, setWalletSuccess] = useState<string | null>(null);
   const [activeWallets, setActiveWallets] = useState<string[]>([]);
+  const [showMethodology, setShowMethodology] = useState(false);
 
   const simulateProvisioning = (wallet: string) => {
     const isAdded = activeWallets.includes(wallet);
@@ -125,18 +126,7 @@ export function CardMaskingPage() {
     }
   }
 
-  async function handleDeactivate(cardId: string) {
-    try {
-      await cardMaskingService.deactivateCard(cardId);
-      setCards(
-        cards.map((card) =>
-          card.id === cardId ? { ...card, status: 'cancelled' } : card
-        )
-      );
-    } catch (error) {
-      console.error('Failed to deactivate card:', error);
-    }
-  }
+
 
   if (isLoading) {
     return <div className="loading">Loading cards...</div>;
@@ -309,96 +299,148 @@ export function CardMaskingPage() {
         </div>
       )}
 
-      {/* Hidden "Real" Cards (Infrastructure View) */}
-      <div className="infrastructure-view">
-        <h3>Active Infrastructure Nodes</h3>
-        <div className="cards-grid">
-          {cards.map((card) => (
-            <VirtualCardDisplay
-              key={card.id}
-              card={card}
-              onDeactivate={() => handleDeactivate(card.id)}
-            />
-          ))}
+      {/* The Sentience Layer (AI Value Intelligence) */}
+      <div className="sentience-layer">
+        <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ color: '#00f3ff' }}>❖</span>
+          Subscription Entropy & Value Matrix
+        </h3>
+
+        <div className="sentience-grid">
+          {/* Dynamic Netflix Node (Only appears if added) */}
+          {cards.find(c => c.linkedMerchant === 'Netflix') && (
+            <div className="smart-node">
+              <div className="entropy-orb pulse-high"></div>
+              <div className="node-header">
+                <span className="node-service">Netflix</span>
+                <span className="node-price">$19.99/mo</span>
+              </div>
+              <div className="node-metrics">
+                <div className="metric">
+                  <span className="metric-label">Efficiency</span>
+                  <span className="metric-value">98%</span>
+                </div>
+                <div className="metric">
+                  <span className="metric-label">CPD (Dopamine)</span>
+                  <span className="metric-value">$0.04</span>
+                </div>
+              </div>
+              <div className="ai-insight insight-high">
+                <strong>Verdict: TRENDING UP</strong><br />
+                Binge-watch detected. You are extracting maximum value right now. Keep until Season 5 ends.
+              </div>
+              <div className="entropy-score">
+                ENTROPY: 0.02 (STABLE)
+              </div>
+            </div>
+          )}
+
+          {/* Static Mock Nodes */}
+          <div className="smart-node">
+            <div className="entropy-orb pulse-stable"></div>
+            <div className="node-header">
+              <span className="node-service">Spotify</span>
+              <span className="node-price">$11.99/mo</span>
+            </div>
+            <div className="node-metrics">
+              <div className="metric">
+                <span className="metric-label">Efficiency</span>
+                <span className="metric-value">84%</span>
+              </div>
+              <div className="metric">
+                <span className="metric-label">CPD (Dopamine)</span>
+                <span className="metric-value">$0.01</span>
+              </div>
+            </div>
+            <div className="ai-insight insight-stable">
+              <strong>Verdict: HIGH UTILITY</strong><br />
+              Your "Gym Playlist" keeps this alive. Cost per hour is negligible. Essential infrastructure.
+            </div>
+            <div className="entropy-score">
+              ENTROPY: 12.5 (LOW)
+            </div>
+          </div>
+
+          <div className="smart-node">
+            <div className="entropy-orb pulse-zombie"></div>
+            <div className="node-header">
+              <span className="node-service">Adobe Creative</span>
+              <span className="node-price">$54.99/mo</span>
+            </div>
+            <div className="node-metrics">
+              <div className="metric">
+                <span className="metric-label">Efficiency</span>
+                <span className="metric-value">4%</span>
+              </div>
+              <div className="metric">
+                <span className="metric-label">Cost / Use</span>
+                <span className="metric-value">$54.00</span>
+              </div>
+            </div>
+            <div className="ai-insight insight-zombie">
+              <strong>Verdict: ZOMBIE DETECTED</strong><br />
+              Opened once in 28 days. Logic suggests immediate termination.
+              <br /><br />
+              <button className="btn danger" style={{ width: '100%', fontSize: '0.8rem' }}>AUTO-CANCEL NOW</button>
+            </div>
+            <div className="entropy-score">
+              ENTROPY: 99.8 (CRITICAL)
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  );
-}
 
-interface VirtualCardDisplayProps {
-  card: VirtualCard;
-  onDeactivate: () => void;
-}
-
-function VirtualCardDisplay({ card, onDeactivate }: VirtualCardDisplayProps) {
-  const [showDetails, setShowDetails] = useState(false);
-
-  const statusColors: Record<VirtualCard['status'], string> = {
-    active: '#4caf50',
-    used: '#ff9800',
-    expired: '#9e9e9e',
-    cancelled: '#f44336',
-  };
-
-  return (
-    <div className={`virtual-card ${card.status}`}>
-      <div className="card-header">
-        <span className="card-type">{formatCardType(card.type)}</span>
-        <span
-          className="card-status"
-          style={{ backgroundColor: statusColors[card.status] }}
-        >
-          {card.status}
-        </span>
-      </div>
-
-      <div className="card-number">
-        {showDetails ? card.maskedNumber : '•••• •••• •••• ••••'}
-      </div>
-
-      <div className="card-details">
-        <div className="detail">
-          <span className="label">Expiry</span>
-          <span className="value">{showDetails ? card.expiryDate : '••/••'}</span>
-        </div>
-        <div className="detail">
-          <span className="label">CVV</span>
-          <span className="value">{showDetails ? card.cvv : '•••'}</span>
-        </div>
-      </div>
-
-      {card.linkedMerchant && (
-        <div className="merchant-lock">
-          🔒 Locked to: {card.linkedMerchant}
-        </div>
-      )}
-
-      {card.spendLimit && (
-        <div className="spend-limit">
-          💰 Limit: ${card.spendLimit}
-        </div>
-      )}
-
-      <div className="card-actions">
-        <button
-          className="btn small"
-          onClick={() => setShowDetails(!showDetails)}
-        >
-          {showDetails ? 'Hide' : 'Show'} Details
+      <div className="methodology-link">
+        <button onClick={() => setShowMethodology(true)}>
+          Methodology: How Sentience Works
         </button>
-        {card.status === 'active' && (
-          <button
-            className="btn small danger"
-            onClick={onDeactivate}
-          >
-            Deactivate
-          </button>
-        )}
       </div>
+
+      {showMethodology && (
+        <div className="modal-overlay" onClick={() => setShowMethodology(false)}>
+          <div className="modal-content methodology-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>The Physics of Value</h3>
+              <span className="badge generated">AI LOGIC</span>
+            </div>
+            <div className="modal-body">
+              <div className="concept-block">
+                <h4 style={{ color: '#00f3ff' }}>⌬ Entropy (Interest Decay)</h4>
+                <p>
+                  We measure the <strong>half-life of your attention</strong>. Every subscription starts with high interest.
+                  Entropy calculates how fast that interest decays after each payment.
+                </p>
+                <ul style={{ fontSize: '0.85rem', color: '#888', paddingLeft: '1.2rem', marginTop: '0.5rem' }}>
+                  <li><strong>Low Entropy (0-10):</strong> Consistent, habit-forming usage.</li>
+                  <li><strong>High Entropy (90+):</strong> "Zombie" state. Payment occurs, but engagement is zero.</li>
+                </ul>
+              </div>
+
+              <div className="concept-block" style={{ marginTop: '1.5rem' }}>
+                <h4 style={{ color: '#34c759' }}>⚡ Cost Per Dopamine (CPD)</h4>
+                <p>
+                  A financial metric for joy. We divide the monthly premium by the <strong>quality-weighted engagement sessions</strong>.
+                </p>
+                <ul style={{ fontSize: '0.85rem', color: '#888', paddingLeft: '1.2rem', marginTop: '0.5rem' }}>
+                  <li><strong>$0.01 - $0.10:</strong> Excellent value (e.g., Spotify, Netflix).</li>
+                  <li><strong>$1.00 - $5.00:</strong> Luxury / Occasional utility.</li>
+                  <li><strong>$50.00+:</strong> Financial hemorrhage (e.g., Forgotten Adobe Tools).</li>
+                </ul>
+              </div>
+            </div>
+            <div className="modal-actions">
+              <button className="btn primary" onClick={() => setShowMethodology(false)}>Understood</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
     </div>
   );
 }
+
+
 
 interface CardGeneratorProps {
   onGenerate: (options: CardGenerationOptions) => void;
@@ -514,11 +556,4 @@ function CardGenerator({ onGenerate, onCancel, isGenerating }: CardGeneratorProp
   );
 }
 
-function formatCardType(type: VirtualCard['type']): string {
-  const labels: Record<VirtualCard['type'], string> = {
-    'single-use': 'Single Use',
-    'merchant-locked': 'Merchant Locked',
-    subscription: 'Subscription',
-  };
-  return labels[type];
-}
+

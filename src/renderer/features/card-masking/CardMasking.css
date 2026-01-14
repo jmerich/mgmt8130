@@ -420,3 +420,249 @@
 .btn.wallet-btn.active:hover .icon-svg {
     /* Optional: change icon on hover if needed */
 }
+/* The Sentience Layer */
+.sentience-layer {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sentience-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+/* AI Smart Node Card */
+.smart-node {
+    background: rgba(22, 22, 30, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.smart-node:hover {
+    transform: translateY(-5px);
+    border-color: rgba(0, 243, 255, 0.3);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* The Entropy Orb */
+.entropy-orb {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    box-shadow: 0 0 20px currentColor;
+}
+
+.entropy-orb::after {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    right: -4px;
+    bottom: -4px;
+    border-radius: 50%;
+    border: 1px solid currentColor;
+    opacity: 0.5;
+    animation: ripple 2s infinite cubic-bezier(0, 0, 0.2, 1);
+}
+
+/* Pulse Speeds based on Usage */
+.pulse-high {
+    color: #00f3ff;
+    animation: beat 0.8s infinite;
+}
+
+/* Vibrant, fast */
+.pulse-stable {
+    color: #34c759;
+    animation: beat 1.5s infinite;
+}
+
+/* Steady, healthy */
+.pulse-decay {
+    color: #ffcc00;
+    animation: beat 3s infinite;
+}
+
+/* Slowing down */
+.pulse-zombie {
+    color: #ff3b30;
+    animation: flicker 4s infinite;
+}
+
+/* Dying light */
+
+@keyframes beat {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.2);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes ripple {
+    0% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: scale(2.5);
+        opacity: 0;
+    }
+}
+
+@keyframes flicker {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.3;
+        transform: scale(0.9);
+    }
+
+    10%,
+    90% {
+        opacity: 0.8;
+    }
+}
+
+/* Node Content */
+.node-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.node-service {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: white;
+}
+
+.node-price {
+    color: #888;
+    font-size: 0.9rem;
+}
+
+/* The AI Verdict Data */
+.node-metrics {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.metric {
+    flex: 1;
+}
+
+.metric-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #666;
+    margin-bottom: 0.3rem;
+    display: block;
+}
+
+.metric-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #ccc;
+}
+
+/* The AI Insight Text */
+.ai-insight {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 0.8rem;
+    border-radius: 8px;
+    border-left: 2px solid;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    margin-top: 1rem;
+}
+
+.insight-high {
+    border-color: #00f3ff;
+    color: #ccfbfd;
+}
+
+.insight-stable {
+    border-color: #34c759;
+    color: #d6fce0;
+}
+
+.insight-decay {
+    border-color: #ffcc00;
+    color: #fff8cc;
+}
+
+.insight-zombie {
+    border-color: #ff3b30;
+    color: #ffd6d4;
+}
+
+.entropy-score {
+    font-family: 'Courier New', monospace;
+    font-size: 0.7rem;
+    opacity: 0.5;
+    margin-top: 0.5rem;
+    text-align: right;
+}
+.methodology-link {
+    display: flex;
+    justify-content: center;
+    margin-top: 3rem;
+    padding-bottom: 2rem;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+}
+
+.methodology-link:hover {
+    opacity: 1;
+}
+
+.methodology-link button {
+    background: none;
+    border: none;
+    color: #666;
+    font-size: 0.8rem;
+    cursor: pointer;
+    text-decoration: underline;
+    letter-spacing: 1px;
+}
+
+.methodology-modal h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.1rem;
+}
+
+.methodology-modal p {
+    margin: 0;
+    line-height: 1.5;
+    color: #ccc;
+}
