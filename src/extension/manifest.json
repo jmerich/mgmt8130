@@ -1,0 +1,47 @@
+{
+    "manifest_version": 3,
+    "name": "SubGuard Ghost",
+    "version": "1.0",
+    "description": "Invisible Finance Companion for SubGuard",
+    "permissions": [
+        "activeTab",
+        "scripting",
+        "storage"
+    ],
+    "host_permissions": [
+        "http://localhost:3000/*",
+        "<all_urls>"
+    ],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "js": [
+                "content.js"
+            ],
+            "all_frames": true
+        }
+    ],
+    "action": {
+        "default_popup": "popup.html"
+    },
+    "icons": {
+        "16": "icon.png",
+        "48": "icon.png",
+        "128": "icon.png"
+    },
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "icon.png"
+            ],
+            "matches": [
+                "<all_urls>"
+            ]
+        }
+    ]
+}
