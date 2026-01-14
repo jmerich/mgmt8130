@@ -157,11 +157,11 @@
 /* Metric Tile - Cyber-Glass Style */
 .metric {
     flex: 1;
-    background: linear-gradient(180deg, rgba(30, 30, 40, 0.7) 0%, rgba(10, 10, 15, 0.9) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    /* More subtle border */
-    border-top-color: rgba(255, 255, 255, 0.15);
-    /* Highlight on top */
+    background-color: #0a0a0f !important;
+    /* Fallback */
+    background: linear-gradient(180deg, rgba(20, 20, 30, 0.9) 0%, rgba(5, 5, 10, 0.95) 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-top-color: rgba(255, 255, 255, 0.2) !important;
     border-radius: 12px;
     /* Slightly softer */
     padding: 0.8rem;
@@ -170,7 +170,7 @@
     position: relative;
     /* For Tooltip positioning */
     cursor: help;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5) !important;
 }
 
 /* Hover: Subtle Outline Highlight */
