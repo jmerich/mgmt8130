@@ -4,6 +4,8 @@ import type { VirtualCard, CardGenerationOptions } from '../../shared/types';
 import { cardMaskingService } from '../../services/stub-service';
 import { useToast } from '../../components/Toast';
 import './CardMasking.css';
+import './AiSentience.css';
+import '../methodology.css';
 
 export function CardMaskingPage() {
   const [cards, setCards] = useState<VirtualCard[]>([]);
