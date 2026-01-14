@@ -7,17 +7,57 @@
  * - Initiating automated price negotiations
  * - Tracking negotiation progress and results
  * - Showing potential and realized savings
+ * - DEMO: Animated chat showing AI negotiating
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { Subscription, NegotiationSession } from '../../shared/types';
 import { autoNegotiationService } from '../../services/stub-service';
+import { useToast } from '../../components/Toast';
 import './AutoNegotiation.css';
+
+// Simulated chat messages for demo
+const NEGOTIATION_SCRIPTS: Record<string, Array<{ role: 'ai' | 'rep'; message: string }>> = {
+  Netflix: [
+    { role: 'ai', message: "Hi! I'm reaching out on behalf of a loyal Netflix customer who's been subscribed for over 2 years." },
+    { role: 'rep', message: "Hello! Thank you for contacting Netflix support. How can I help you today?" },
+    { role: 'ai', message: "My customer is considering canceling due to recent price increases. They love the service but are looking to reduce monthly expenses." },
+    { role: 'rep', message: "I understand. Let me check what options we have available..." },
+    { role: 'rep', message: "I can offer a 20% discount for the next 6 months. Would that work?" },
+    { role: 'ai', message: "That's a great start! Could we possibly extend that to 12 months given their loyalty?" },
+    { role: 'rep', message: "I can do 25% off for 12 months. That's our best retention offer." },
+    { role: 'ai', message: "Perfect! My customer accepts. Thank you for your help!" },
+  ],
+  Spotify: [
+    { role: 'ai', message: "Hello! I'm negotiating on behalf of a Premium subscriber who's been with Spotify for 18 months." },
+    { role: 'rep', message: "Hi there! How can I assist you?" },
+    { role: 'ai', message: "They're comparing prices with Apple Music and considering switching. Is there any loyalty discount available?" },
+    { role: 'rep', message: "Let me look into your account... I see you've been a great customer." },
+    { role: 'rep', message: "I can offer 3 months at 50% off." },
+    { role: 'ai', message: "That's helpful! Can we make it 6 months?" },
+    { role: 'rep', message: "I can do 4 months at 50% off. Final offer!" },
+    { role: 'ai', message: "Deal! Thank you for working with us." },
+  ],
+  default: [
+    { role: 'ai', message: "Hi! I'm reaching out about a subscription price negotiation." },
+    { role: 'rep', message: "Hello! How can I help you today?" },
+    { role: 'ai', message: "My customer is a loyal subscriber looking to reduce their monthly bill." },
+    { role: 'rep', message: "I understand. Let me check what discounts are available..." },
+    { role: 'rep', message: "I can offer a 15% discount for the next 6 months." },
+    { role: 'ai', message: "Thank you! That works for us." },
+  ],
+};
 
 export function AutoNegotiationPage() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
-  const [negotiations, setNegotiations] = useState<Map<string, NegotiationSession>>(new Map());
+  const [activeNegotiation, setActiveNegotiation] = useState<{
+    subscription: Subscription;
+    messages: Array<{ role: 'ai' | 'rep'; message: string }>;
+    status: 'chatting' | 'success' | 'failed';
+    discount?: number;
+  } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { showToast } = useToast();
 
   useEffect(() => {
     loadSubscriptions();
@@ -35,33 +75,50 @@ export function AutoNegotiationPage() {
     }
   }
 
-  async function startNegotiation(subscriptionId: string) {
-    try {
-      const session = await autoNegotiationService.startNegotiation(subscriptionId);
-      setNegotiations(new Map(negotiations.set(subscriptionId, session)));
+  function startNegotiation(subscription: Subscription) {
+    const script = NEGOTIATION_SCRIPTS[subscription.serviceName] || NEGOTIATION_SCRIPTS.default;
 
-      // Poll for status updates
-      pollNegotiationStatus(session.id, subscriptionId);
-    } catch (error) {
-      console.error('Failed to start negotiation:', error);
-    }
+    setActiveNegotiation({
+      subscription,
+      messages: [],
+      status: 'chatting',
+    });
+
+    // Animate messages one by one
+    let index = 0;
+    const interval = setInterval(() => {
+      if (index >= script.length) {
+        clearInterval(interval);
+        // Determine outcome
+        const success = Math.random() > 0.2; // 80% success rate
+        const discount = success ? Math.floor(15 + Math.random() * 20) : 0;
+
+        setActiveNegotiation((prev) => prev ? {
+          ...prev,
+          status: success ? 'success' : 'failed',
+          discount,
+        } : null);
+
+        if (success) {
+          showToast(`Negotiation successful! ${discount}% discount secured.`, 'success', '🎉');
+        }
+        return;
+      }
+
+      setActiveNegotiation((prev) => prev ? {
+        ...prev,
+        messages: [...prev.messages, script[index]],
+      } : null);
+      index++;
+    }, 1500);
   }
 
-  async function pollNegotiationStatus(sessionId: string, subscriptionId: string) {
-    const poll = async () => {
-      const status = await autoNegotiationService.getNegotiationStatus(sessionId);
-      if (status) {
-        setNegotiations(new Map(negotiations.set(subscriptionId, status)));
-        if (status.status === 'in-progress' || status.status === 'pending') {
-          setTimeout(poll, 1000);
-        }
-      }
-    };
-    setTimeout(poll, 1000);
+  function closeNegotiation() {
+    setActiveNegotiation(null);
   }
 
   const totalMonthly = subscriptions.reduce((sum, sub) => sum + sub.currentPrice, 0);
-  const potentialSavings = totalMonthly * 0.2; // Estimate 20% potential savings
+  const potentialSavings = totalMonthly * 0.2;
 
   if (isLoading) {
     return <div className="loading">Loading subscriptions...</div>;
@@ -70,8 +127,10 @@ export function AutoNegotiationPage() {
   return (
     <div className="auto-negotiation">
       <header className="page-header">
-        <h2>Auto-Negotiation</h2>
-        <p>Let us negotiate better prices on your subscriptions</p>
+        <div>
+          <h2>Auto-Negotiation</h2>
+          <p>Let our AI negotiate better prices on your subscriptions</p>
+        </div>
       </header>
 
       <div className="stats-bar">
@@ -89,6 +148,13 @@ export function AutoNegotiationPage() {
         </div>
       </div>
 
+      {activeNegotiation && (
+        <NegotiationChat
+          negotiation={activeNegotiation}
+          onClose={closeNegotiation}
+        />
+      )}
+
       <div className="subscriptions-list">
         {subscriptions.length === 0 ? (
           <div className="empty-state">
@@ -99,8 +165,8 @@ export function AutoNegotiationPage() {
             <SubscriptionCard
               key={subscription.id}
               subscription={subscription}
-              negotiation={negotiations.get(subscription.id)}
-              onNegotiate={() => startNegotiation(subscription.id)}
+              onNegotiate={() => startNegotiation(subscription)}
+              isNegotiating={activeNegotiation?.subscription.id === subscription.id}
             />
           ))
         )}
@@ -109,19 +175,97 @@ export function AutoNegotiationPage() {
   );
 }
 
-interface SubscriptionCardProps {
-  subscription: Subscription;
-  negotiation?: NegotiationSession;
-  onNegotiate: () => void;
+interface NegotiationChatProps {
+  negotiation: {
+    subscription: Subscription;
+    messages: Array<{ role: 'ai' | 'rep'; message: string }>;
+    status: 'chatting' | 'success' | 'failed';
+    discount?: number;
+  };
+  onClose: () => void;
 }
 
-function SubscriptionCard({ subscription, negotiation, onNegotiate }: SubscriptionCardProps) {
-  const isNegotiating = negotiation?.status === 'in-progress' || negotiation?.status === 'pending';
-  const isSuccess = negotiation?.status === 'success';
-  const isFailed = negotiation?.status === 'failed';
+function NegotiationChat({ negotiation, onClose }: NegotiationChatProps) {
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [negotiation.messages]);
 
   return (
-    <div className={`subscription-card ${isSuccess ? 'success' : ''}`}>
+    <div className="negotiation-overlay">
+      <div className="negotiation-modal">
+        <div className="chat-header">
+          <div className="chat-title">
+            <span className="chat-icon">🤝</span>
+            <div>
+              <h3>Negotiating with {negotiation.subscription.serviceName}</h3>
+              <p>AI Agent is working on your behalf</p>
+            </div>
+          </div>
+          {negotiation.status !== 'chatting' && (
+            <button className="close-btn" onClick={onClose}>×</button>
+          )}
+        </div>
+
+        <div className="chat-messages">
+          {negotiation.messages.map((msg, i) => (
+            <div key={i} className={`chat-message ${msg.role}`}>
+              <div className="message-avatar">
+                {msg.role === 'ai' ? '🤖' : '👤'}
+              </div>
+              <div className="message-content">
+                <span className="message-sender">
+                  {msg.role === 'ai' ? 'SubGuard AI' : `${negotiation.subscription.serviceName} Rep`}
+                </span>
+                <p>{msg.message}</p>
+              </div>
+            </div>
+          ))}
+
+          {negotiation.status === 'chatting' && (
+            <div className="typing-indicator">
+              <span></span><span></span><span></span>
+            </div>
+          )}
+
+          <div ref={messagesEndRef} />
+        </div>
+
+        {negotiation.status === 'success' && (
+          <div className="negotiation-result success">
+            <div className="result-icon">🎉</div>
+            <h4>Negotiation Successful!</h4>
+            <p className="discount-amount">{negotiation.discount}% discount secured</p>
+            <p className="savings-detail">
+              You'll save ${((negotiation.subscription.currentPrice * (negotiation.discount || 0)) / 100).toFixed(2)}/month
+            </p>
+            <button className="btn primary" onClick={onClose}>Done</button>
+          </div>
+        )}
+
+        {negotiation.status === 'failed' && (
+          <div className="negotiation-result failed">
+            <div className="result-icon">😔</div>
+            <h4>No Discount Available</h4>
+            <p>The service wasn't able to offer a discount at this time. Try again in 30 days.</p>
+            <button className="btn secondary" onClick={onClose}>Close</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+interface SubscriptionCardProps {
+  subscription: Subscription;
+  onNegotiate: () => void;
+  isNegotiating: boolean;
+}
+
+function SubscriptionCard({ subscription, onNegotiate, isNegotiating }: SubscriptionCardProps) {
+  return (
+    <div className="subscription-card">
       <div className="subscription-icon">
         {getServiceIcon(subscription.serviceName)}
       </div>
@@ -131,19 +275,9 @@ function SubscriptionCard({ subscription, negotiation, onNegotiate }: Subscripti
         <span className="subscription-category">{subscription.category}</span>
 
         <div className="pricing">
-          {isSuccess && negotiation?.negotiatedPrice ? (
-            <>
-              <span className="original-price">${subscription.currentPrice}</span>
-              <span className="new-price">${negotiation.negotiatedPrice}</span>
-              <span className="savings-badge">
-                Save {negotiation.savingsPercent}%
-              </span>
-            </>
-          ) : (
-            <span className="current-price">
-              ${subscription.currentPrice}/{subscription.billingCycle === 'monthly' ? 'mo' : 'yr'}
-            </span>
-          )}
+          <span className="current-price">
+            ${subscription.currentPrice}/{subscription.billingCycle === 'monthly' ? 'mo' : 'yr'}
+          </span>
         </div>
 
         <div className="next-billing">
@@ -153,27 +287,16 @@ function SubscriptionCard({ subscription, negotiation, onNegotiate }: Subscripti
 
       <div className="subscription-actions">
         {isNegotiating ? (
-          <div className="negotiating">
-            <div className="spinner"></div>
+          <div className="negotiating-badge">
+            <div className="spinner small"></div>
             <span>Negotiating...</span>
-          </div>
-        ) : isSuccess ? (
-          <div className="negotiation-result success">
-            <span>✓ Price reduced!</span>
-          </div>
-        ) : isFailed ? (
-          <div className="negotiation-result failed">
-            <span>Could not reduce price</span>
-            <button className="btn small" onClick={onNegotiate}>
-              Try Again
-            </button>
           </div>
         ) : subscription.negotiationEligible ? (
           <button className="btn primary" onClick={onNegotiate}>
-            Negotiate Price
+            🤝 Negotiate Price
           </button>
         ) : (
-          <span className="not-eligible">Not eligible</span>
+          <span className="not-eligible">Not eligible yet</span>
         )}
       </div>
     </div>

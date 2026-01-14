@@ -7,18 +7,23 @@
  * - One-time use cards for trial signups
  * - Merchant-locked cards for subscriptions
  * - Card lifecycle management
+ * - DEMO: Fake checkout flow
  */
 
 import React, { useState, useEffect } from 'react';
 import type { VirtualCard, CardGenerationOptions } from '../../shared/types';
 import { cardMaskingService } from '../../services/stub-service';
+import { useToast } from '../../components/Toast';
 import './CardMasking.css';
 
 export function CardMaskingPage() {
   const [cards, setCards] = useState<VirtualCard[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showGenerator, setShowGenerator] = useState(false);
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [selectedCard, setSelectedCard] = useState<VirtualCard | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const { showToast } = useToast();
 
   useEffect(() => {
     loadCards();
@@ -42,6 +47,7 @@ export function CardMaskingPage() {
       const newCard = await cardMaskingService.generateCard(options);
       setCards([newCard, ...cards]);
       setShowGenerator(false);
+      showToast('Virtual card generated!', 'success', '💳');
     } catch (error) {
       console.error('Failed to generate card:', error);
     } finally {
@@ -57,9 +63,15 @@ export function CardMaskingPage() {
           card.id === cardId ? { ...card, status: 'cancelled' } : card
         )
       );
+      showToast('Card deactivated', 'warning', '🚫');
     } catch (error) {
       console.error('Failed to deactivate card:', error);
     }
+  }
+
+  function handleTryCheckout(card: VirtualCard) {
+    setSelectedCard(card);
+    setShowCheckout(true);
   }
 
   if (isLoading) {
@@ -69,8 +81,10 @@ export function CardMaskingPage() {
   return (
     <div className="card-masking">
       <header className="page-header">
-        <h2>Card Masking</h2>
-        <p>Generate virtual cards for trials, subscriptions, and one-time purchases</p>
+        <div>
+          <h2>Card Masking</h2>
+          <p>Generate virtual cards for trials, subscriptions, and one-time purchases</p>
+        </div>
         <button className="btn primary" onClick={() => setShowGenerator(true)}>
           + Generate New Card
         </button>
@@ -81,6 +95,29 @@ export function CardMaskingPage() {
           onGenerate={handleGenerateCard}
           onCancel={() => setShowGenerator(false)}
           isGenerating={isGenerating}
+        />
+      )}
+
+      {showCheckout && selectedCard && (
+        <FakeCheckout
+          card={selectedCard}
+          onClose={() => {
+            setShowCheckout(false);
+            setSelectedCard(null);
+          }}
+          onSuccess={() => {
+            // Mark card as used if single-use
+            if (selectedCard.type === 'single-use') {
+              setCards(
+                cards.map((c) =>
+                  c.id === selectedCard.id ? { ...c, status: 'used' } : c
+                )
+              );
+            }
+            showToast('Payment successful! Trial activated.', 'success', '✅');
+            setShowCheckout(false);
+            setSelectedCard(null);
+          }}
         />
       )}
 
@@ -96,6 +133,7 @@ export function CardMaskingPage() {
               key={card.id}
               card={card}
               onDeactivate={() => handleDeactivate(card.id)}
+              onTryCheckout={() => handleTryCheckout(card)}
             />
           ))
         )}
@@ -107,9 +145,10 @@ export function CardMaskingPage() {
 interface VirtualCardDisplayProps {
   card: VirtualCard;
   onDeactivate: () => void;
+  onTryCheckout: () => void;
 }
 
-function VirtualCardDisplay({ card, onDeactivate }: VirtualCardDisplayProps) {
+function VirtualCardDisplay({ card, onDeactivate, onTryCheckout }: VirtualCardDisplayProps) {
   const [showDetails, setShowDetails] = useState(false);
 
   const statusColors: Record<VirtualCard['status'], string> = {
@@ -142,7 +181,7 @@ function VirtualCardDisplay({ card, onDeactivate }: VirtualCardDisplayProps) {
         </div>
         <div className="detail">
           <span className="label">CVV</span>
-          <span className="value">{showDetails ? card.cvv : '•••'}</span>
+          <span className="value">{showDetails ? '123' : '•••'}</span>
         </div>
       </div>
 
@@ -163,15 +202,108 @@ function VirtualCardDisplay({ card, onDeactivate }: VirtualCardDisplayProps) {
           className="btn small"
           onClick={() => setShowDetails(!showDetails)}
         >
-          {showDetails ? 'Hide' : 'Show'} Details
+          {showDetails ? 'Hide' : 'Show'}
         </button>
         {card.status === 'active' && (
-          <button
-            className="btn small danger"
-            onClick={onDeactivate}
-          >
-            Deactivate
-          </button>
+          <>
+            <button className="btn small demo" onClick={onTryCheckout}>
+              Try Checkout
+            </button>
+            <button className="btn small danger" onClick={onDeactivate}>
+              Cancel
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+interface FakeCheckoutProps {
+  card: VirtualCard;
+  onClose: () => void;
+  onSuccess: () => void;
+}
+
+function FakeCheckout({ card, onClose, onSuccess }: FakeCheckoutProps) {
+  const [step, setStep] = useState<'form' | 'processing' | 'success'>('form');
+  const [merchant] = useState(() => {
+    const merchants = ['StreamFlix', 'MusicCloud Pro', 'FitnessPal Premium', 'CloudStorage+'];
+    return merchants[Math.floor(Math.random() * merchants.length)];
+  });
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setStep('processing');
+
+    // Simulate processing
+    setTimeout(() => {
+      setStep('success');
+      setTimeout(onSuccess, 1500);
+    }, 2000);
+  }
+
+  return (
+    <div className="checkout-overlay">
+      <div className="checkout-modal">
+        <button className="close-btn" onClick={onClose}>×</button>
+
+        <div className="checkout-header">
+          <div className="merchant-logo">🏪</div>
+          <h3>{merchant}</h3>
+          <p>Start your free trial</p>
+        </div>
+
+        {step === 'form' && (
+          <form className="checkout-form" onSubmit={handleSubmit}>
+            <div className="trial-info">
+              <span className="trial-badge">7-DAY FREE TRIAL</span>
+              <p>Then $9.99/month. Cancel anytime.</p>
+            </div>
+
+            <div className="form-group">
+              <label>Card Number</label>
+              <input
+                type="text"
+                value={card.maskedNumber}
+                readOnly
+                className="card-input"
+              />
+              <span className="virtual-badge">Virtual Card</span>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label>Expiry</label>
+                <input type="text" value={card.expiryDate} readOnly />
+              </div>
+              <div className="form-group">
+                <label>CVV</label>
+                <input type="text" value="123" readOnly />
+              </div>
+            </div>
+
+            <button type="submit" className="btn primary checkout-btn">
+              Start Free Trial
+            </button>
+
+            <p className="secure-note">🔒 Your real card details are never shared</p>
+          </form>
+        )}
+
+        {step === 'processing' && (
+          <div className="checkout-processing">
+            <div className="spinner large"></div>
+            <p>Processing payment...</p>
+          </div>
+        )}
+
+        {step === 'success' && (
+          <div className="checkout-success">
+            <div className="success-icon">✓</div>
+            <h4>Trial Activated!</h4>
+            <p>Your virtual card will auto-cancel before you're charged.</p>
+          </div>
         )}
       </div>
     </div>
