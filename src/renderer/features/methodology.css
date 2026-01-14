@@ -1,0 +1,33 @@
+.methodology-link {
+    display: flex;
+    justify-content: center;
+    margin-top: 3rem;
+    padding-bottom: 2rem;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+}
+
+.methodology-link:hover {
+    opacity: 1;
+}
+
+.methodology-link button {
+    background: none;
+    border: none;
+    color: #666;
+    font-size: 0.8rem;
+    cursor: pointer;
+    text-decoration: underline;
+    letter-spacing: 1px;
+}
+
+.methodology-modal h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.1rem;
+}
+
+.methodology-modal p {
+    margin: 0;
+    line-height: 1.5;
+    color: #ccc;
+}
