@@ -4,22 +4,102 @@
 (function() {
   'use strict';
 
-  // Shopping site patterns
+  // ==================== CONFIGURATION ====================
+  // Note: Content scripts can't use ES module imports, so config is defined inline
+  // Keep in sync with chrome-extension/config.js
+
+  const CONFIG = {
+    API_URL: 'http://localhost:3001/api',
+    DASHBOARD_URL: 'http://localhost:5173',
+    POLLING: {
+      SESSION_UPDATE: 5000,
+    },
+    UI: {
+      TOAST_DURATION: 3000,
+      PAUSE_DURATION: 30,
+      REDIRECT_COUNTDOWN: 5,
+    },
+    Z_INDEX: {
+      OVERLAY: 2147483647,
+    },
+  };
+
+  // SubGuard dashboard URLs to exclude from monitoring
+  const EXCLUDED_URLS = {
+    hostnames: ['localhost'],
+    ports: ['5173', '3001'],
+  };
+
+  // Shopping site detection patterns
   const SHOPPING_PATTERNS = {
     domains: [
-      'amazon.com', 'ebay.com', 'walmart.com', 'target.com', 'bestbuy.com',
+      'amazon.com', 'amazon.co.uk', 'amazon.ca', 'amazon.de',
+      'ebay.com', 'ebay.co.uk',
+      'walmart.com', 'target.com', 'bestbuy.com',
       'etsy.com', 'shopify.com', 'aliexpress.com', 'wish.com', 'wayfair.com',
       'nordstrom.com', 'macys.com', 'zappos.com', 'nike.com', 'adidas.com',
-      'costco.com', 'sephora.com', 'ulta.com', 'homedepot.com', 'lowes.com'
+      'costco.com', 'sephora.com', 'ulta.com', 'homedepot.com', 'lowes.com',
+      'newegg.com', 'overstock.com',
     ],
     checkoutKeywords: [
       'checkout', 'cart', 'basket', 'bag', 'payment', 'billing',
-      'shipping', 'order', 'purchase', 'buy now', 'add to cart'
+      'shipping', 'order', 'purchase', 'buy now', 'add to cart',
     ],
-    pricePatterns: /\$[\d,]+\.?\d*/g
+    pricePattern: /\$[\d,]+\.?\d*/g,
+    maxValidPrice: 100000,
   };
 
-  // State
+  // Checkout button detection patterns
+  const CHECKOUT_BUTTON_PATTERNS = {
+    textPatterns: [
+      'checkout', 'check out', 'sign in to', 'proceed',
+      'place order', 'place your order', 'complete purchase', 'complete order',
+      'buy now', 'buy it now', 'submit order', 'pay now', 'pay $',
+      'continue to payment', 'continue to checkout', 'go to checkout',
+      'view cart', 'view bag', 'start checkout',
+    ],
+    classPatterns: ['checkout', 'proceed', 'buy-now', 'place-order'],
+    idPatterns: ['checkout', 'buy-now', 'place-order'],
+    hrefPatterns: ['checkout', '/buy/', '/cart', '/basket', '/bag'],
+  };
+
+  // Urgency tactics (dark patterns) to detect
+  const URGENCY_TACTICS = [
+    { phrase: 'only .* left', type: 'scarcity' },
+    { phrase: 'limited time', type: 'urgency' },
+    { phrase: 'sale ends', type: 'urgency' },
+    { phrase: 'hurry', type: 'urgency' },
+    { phrase: 'last chance', type: 'urgency' },
+    { phrase: 'selling fast', type: 'scarcity' },
+    { phrase: 'in high demand', type: 'social_proof' },
+    { phrase: 'people are viewing', type: 'social_proof' },
+    { phrase: 'people bought', type: 'social_proof' },
+    { phrase: 'flash sale', type: 'urgency' },
+    { phrase: 'today only', type: 'urgency' },
+    { phrase: 'exclusive offer', type: 'exclusivity' },
+    { phrase: 'members only', type: 'exclusivity' },
+  ];
+
+  // Risk level scoring weights
+  const RISK_WEIGHTS = {
+    isShoppingSite: 20,
+    isCheckoutPage: 40,
+    isProductPage: 15,
+    highPriceItem: 15,
+    urgencyTactic: 10,
+    hasCartItems: 20,
+    lateNightShopping: 15,
+    weekendShopping: 5,
+  };
+
+  // Risk level thresholds
+  const RISK_THRESHOLDS = {
+    critical: 70,
+    high: 50,
+    medium: 30,
+  };
+
+  // ==================== STATE ====================
   let pageAnalysis = null;
   let overlayVisible = false;
   let autonomySettings = null;
@@ -32,13 +112,11 @@
     timeOnShoppingSites: 0
   };
 
-  const SUBGUARD_API = 'http://localhost:3001/api';
-
   // Check if we're on the SubGuard dashboard - don't interfere with it
   function isSubGuardDashboard() {
     const hostname = window.location.hostname;
     const port = window.location.port;
-    return hostname === 'localhost' && (port === '5173' || port === '3001');
+    return EXCLUDED_URLS.hostnames.includes(hostname) && EXCLUDED_URLS.ports.includes(port);
   }
 
   // Initialize
@@ -61,7 +139,7 @@
   // Fetch autonomy settings from API
   async function fetchAutonomySettings() {
     try {
-      const response = await fetch(`${SUBGUARD_API}/autonomy/settings`);
+      const response = await fetch(`${CONFIG.API_URL}/autonomy/settings`);
       if (response.ok) {
         const data = await response.json();
         autonomySettings = data.settings;
@@ -77,7 +155,7 @@
     if (!pageAnalysis?.isShoppingSite) return;
 
     try {
-      const response = await fetch(`${SUBGUARD_API}/autonomy/check`, {
+      const response = await fetch(`${CONFIG.API_URL}/autonomy/check`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -195,19 +273,19 @@
     overlayVisible = true;
 
     // Countdown and redirect
-    let seconds = 5;
+    let seconds = CONFIG.UI.REDIRECT_COUNTDOWN;
     const countdownInterval = setInterval(() => {
       seconds--;
       timer.textContent = seconds.toString();
       if (seconds <= 0) {
         clearInterval(countdownInterval);
-        window.location.href = 'http://localhost:5173/?redirected=true&reason=' + encodeURIComponent(decision.reason);
+        window.location.href = CONFIG.DASHBOARD_URL + '/?redirected=true&reason=' + encodeURIComponent(decision.reason);
       }
     }, 1000);
 
     acceptBtn.addEventListener('click', () => {
       clearInterval(countdownInterval);
-      window.location.href = 'http://localhost:5173/?redirected=true&reason=' + encodeURIComponent(decision.reason);
+      window.location.href = CONFIG.DASHBOARD_URL + '/?redirected=true&reason=' + encodeURIComponent(decision.reason);
     });
 
     overrideBtn.addEventListener('click', () => {
@@ -285,7 +363,7 @@
     });
 
     dashboardBtn.addEventListener('click', () => {
-      window.location.href = 'http://localhost:5173';
+      window.location.href = CONFIG.DASHBOARD_URL;
     });
   }
 
@@ -452,10 +530,10 @@
 
   // Extract prices from page
   function extractPrices(text) {
-    const matches = text.match(SHOPPING_PATTERNS.pricePatterns) || [];
+    const matches = text.match(SHOPPING_PATTERNS.pricePattern) || [];
     return matches
       .map(p => parseFloat(p.replace(/[$,]/g, '')))
-      .filter(p => p > 0 && p < 100000)
+      .filter(p => p > 0 && p < SHOPPING_PATTERNS.maxValidPrice)
       .slice(0, 20);
   }
 
@@ -477,23 +555,7 @@
     const tactics = [];
     const textLower = pageText.toLowerCase();
 
-    const urgencyPhrases = [
-      { phrase: 'only .* left', type: 'scarcity' },
-      { phrase: 'limited time', type: 'urgency' },
-      { phrase: 'sale ends', type: 'urgency' },
-      { phrase: 'hurry', type: 'urgency' },
-      { phrase: 'last chance', type: 'urgency' },
-      { phrase: 'selling fast', type: 'scarcity' },
-      { phrase: 'in high demand', type: 'social_proof' },
-      { phrase: 'people are viewing', type: 'social_proof' },
-      { phrase: 'people bought', type: 'social_proof' },
-      { phrase: 'flash sale', type: 'urgency' },
-      { phrase: 'today only', type: 'urgency' },
-      { phrase: 'exclusive offer', type: 'exclusivity' },
-      { phrase: 'members only', type: 'exclusivity' }
-    ];
-
-    urgencyPhrases.forEach(({ phrase, type }) => {
+    URGENCY_TACTICS.forEach(({ phrase, type }) => {
       const regex = new RegExp(phrase, 'i');
       if (regex.test(textLower)) {
         tactics.push({ phrase, type });
@@ -507,20 +569,20 @@
   function calculateRiskLevel(analysis) {
     let score = 0;
 
-    if (analysis.isShoppingSite) score += 20;
-    if (analysis.isCheckoutPage) score += 40;
-    if (analysis.isProductPage) score += 15;
-    if (analysis.prices.some(p => p > 100)) score += 15;
-    if (analysis.urgencyTactics.length > 0) score += analysis.urgencyTactics.length * 10;
-    if (analysis.cartItems > 0) score += 20;
+    if (analysis.isShoppingSite) score += RISK_WEIGHTS.isShoppingSite;
+    if (analysis.isCheckoutPage) score += RISK_WEIGHTS.isCheckoutPage;
+    if (analysis.isProductPage) score += RISK_WEIGHTS.isProductPage;
+    if (analysis.prices.some(p => p > 100)) score += RISK_WEIGHTS.highPriceItem;
+    if (analysis.urgencyTactics.length > 0) score += analysis.urgencyTactics.length * RISK_WEIGHTS.urgencyTactic;
+    if (analysis.cartItems > 0) score += RISK_WEIGHTS.hasCartItems;
 
     const hour = new Date().getHours();
-    if (hour >= 22 || hour <= 5) score += 15;
-    if (new Date().getDay() === 0 || new Date().getDay() === 6) score += 5;
+    if (hour >= 22 || hour <= 5) score += RISK_WEIGHTS.lateNightShopping;
+    if (new Date().getDay() === 0 || new Date().getDay() === 6) score += RISK_WEIGHTS.weekendShopping;
 
-    if (score >= 70) return 'critical';
-    if (score >= 50) return 'high';
-    if (score >= 30) return 'medium';
+    if (score >= RISK_THRESHOLDS.critical) return 'critical';
+    if (score >= RISK_THRESHOLDS.high) return 'high';
+    if (score >= RISK_THRESHOLDS.medium) return 'medium';
     return 'low';
   }
 
@@ -709,7 +771,7 @@
 
   function startPauseTimer() {
     const btn = document.getElementById('subguard-pause');
-    let seconds = 30;
+    let seconds = CONFIG.UI.PAUSE_DURATION;
     btn.disabled = true;
 
     const interval = setInterval(() => {
@@ -751,39 +813,12 @@
       const id = (target.id || '').toLowerCase();
       const href = (target.href || '').toLowerCase();
 
-      // Detect checkout/proceed buttons - be aggressive!
+      // Detect checkout/proceed buttons using CHECKOUT_BUTTON_PATTERNS
       const isCheckoutButton =
-        text.includes('checkout') ||
-        text.includes('check out') ||
-        text.includes('sign in to') ||
-        text.includes('proceed') ||
-        text.includes('place order') ||
-        text.includes('place your order') ||
-        text.includes('complete purchase') ||
-        text.includes('complete order') ||
-        text.includes('buy now') ||
-        text.includes('buy it now') ||
-        text.includes('submit order') ||
-        text.includes('pay now') ||
-        text.includes('pay $') ||
-        text.includes('continue to payment') ||
-        text.includes('continue to checkout') ||
-        text.includes('go to checkout') ||
-        text.includes('view cart') ||
-        text.includes('view bag') ||
-        text.includes('start checkout') ||
-        className.includes('checkout') ||
-        className.includes('proceed') ||
-        className.includes('buy-now') ||
-        className.includes('place-order') ||
-        id.includes('checkout') ||
-        id.includes('buy-now') ||
-        id.includes('place-order') ||
-        href.includes('checkout') ||
-        href.includes('/buy/') ||
-        href.includes('/cart') ||
-        href.includes('/basket') ||
-        href.includes('/bag') ||
+        CHECKOUT_BUTTON_PATTERNS.textPatterns.some(p => text.includes(p)) ||
+        CHECKOUT_BUTTON_PATTERNS.classPatterns.some(p => className.includes(p)) ||
+        CHECKOUT_BUTTON_PATTERNS.idPatterns.some(p => id.includes(p)) ||
+        CHECKOUT_BUTTON_PATTERNS.hrefPatterns.some(p => href.includes(p)) ||
         target.getAttribute('data-action')?.includes('checkout') ||
         target.getAttribute('name')?.includes('checkout');
 
@@ -887,7 +922,7 @@
         try {
           const currentPrice = pageAnalysis?.prices?.length > 0 ? Math.max(...pageAnalysis.prices) : 0;
 
-          const response = await fetch(`${SUBGUARD_API}/autonomy/check`, {
+          const response = await fetch(`${CONFIG.API_URL}/autonomy/check`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -932,7 +967,7 @@
     setTimeout(() => {
       toast.classList.add('fade-out');
       setTimeout(() => toast.remove(), 300);
-    }, 3000);
+    }, CONFIG.UI.TOAST_DURATION);
   }
 
   // Report to background script
@@ -947,7 +982,7 @@
       try {
         if (!chrome.runtime?.id) return; // Extension context invalidated
         if (pageAnalysis?.isShoppingSite && sessionData) {
-          sessionData.timeOnShoppingSites += 5;
+          sessionData.timeOnShoppingSites += CONFIG.POLLING.SESSION_UPDATE / 1000;
         }
         chrome.runtime.sendMessage({
           type: 'SESSION_UPDATE',
@@ -956,7 +991,7 @@
       } catch (e) {
         // Extension was reloaded, ignore
       }
-    }, 5000);
+    }, CONFIG.POLLING.SESSION_UPDATE);
   }
 
   // Listen for messages from background

@@ -1,0 +1,9 @@
+{
+  "level": "moderate",
+  "dailySpendingLimit": 200,
+  "maxShoppingTime": 60,
+  "blockCheckoutAbove": 100,
+  "autoRedirectOnRisk": false,
+  "enforceCoolingOff": true,
+  "coolingOffMinutes": 5
+}

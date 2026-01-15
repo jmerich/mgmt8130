@@ -5,6 +5,7 @@ import { PurchaseBlockingPage } from './features/purchase-blocking/PurchaseBlock
 import { CardMaskingPage } from './features/card-masking/CardMaskingPage';
 import { AutoNegotiationPage } from './features/auto-negotiation/AutoNegotiationPage';
 import { NetflixMockPage } from './features/demo/NetflixMockPage';
+import { CONFIG, type AutonomyLevel } from '../config';
 import './App.css';
 
 function App() {
@@ -68,48 +69,28 @@ function AppContent() {
   );
 }
 
-// Autonomy settings types
+// Autonomy settings types (uses config for defaults)
 interface AutonomySettings {
-  level: 'minimal' | 'moderate' | 'high' | 'full';
+  level: AutonomyLevel;
   dailySpendingLimit: number;
-  maxShoppingTime: number; // minutes
+  maxShoppingTime: number;
   blockCheckoutAbove: number;
   autoRedirectOnRisk: boolean;
-  enforceColingOff: boolean;
+  enforceCoolingOff: boolean;
   coolingOffMinutes: number;
 }
 
 const DEFAULT_AUTONOMY: AutonomySettings = {
-  level: 'moderate',
-  dailySpendingLimit: 200,
-  maxShoppingTime: 60,
-  blockCheckoutAbove: 100,
-  autoRedirectOnRisk: false,
-  enforceColingOff: true,
-  coolingOffMinutes: 5
+  level: CONFIG.AUTONOMY_DEFAULTS.level,
+  dailySpendingLimit: CONFIG.AUTONOMY_DEFAULTS.dailySpendingLimit,
+  maxShoppingTime: CONFIG.AUTONOMY_DEFAULTS.maxShoppingTime,
+  blockCheckoutAbove: CONFIG.AUTONOMY_DEFAULTS.blockCheckoutAbove,
+  autoRedirectOnRisk: CONFIG.AUTONOMY_DEFAULTS.autoRedirectOnRisk,
+  enforceCoolingOff: CONFIG.AUTONOMY_DEFAULTS.enforceCoolingOff,
+  coolingOffMinutes: CONFIG.AUTONOMY_DEFAULTS.coolingOffMinutes,
 };
 
-const AUTONOMY_PRESETS: Record<string, Partial<AutonomySettings>> = {
-  minimal: {
-    autoRedirectOnRisk: false,
-    enforceColingOff: false,
-  },
-  moderate: {
-    autoRedirectOnRisk: false,
-    enforceColingOff: true,
-    coolingOffMinutes: 5
-  },
-  high: {
-    autoRedirectOnRisk: true,
-    enforceColingOff: true,
-    coolingOffMinutes: 10
-  },
-  full: {
-    autoRedirectOnRisk: true,
-    enforceColingOff: true,
-    coolingOffMinutes: 15
-  }
-};
+const AUTONOMY_PRESETS = CONFIG.AUTONOMY_PRESETS;
 
 function Dashboard() {
   const [extensionData, setExtensionData] = React.useState<any>(null);
@@ -133,7 +114,7 @@ function Dashboard() {
     };
 
     fetchExtensionData();
-    const interval = setInterval(fetchExtensionData, 5000);
+    const interval = setInterval(fetchExtensionData, CONFIG.POLLING.EXTENSION_DATA);
     return () => clearInterval(interval);
   }, []);
 

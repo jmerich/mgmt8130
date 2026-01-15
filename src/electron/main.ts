@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow } from 'electron';
 import path from 'path';
 
 let mainWindow: BrowserWindow | null = null;
@@ -39,20 +39,4 @@ app.on('activate', () => {
   if (mainWindow === null) {
     createWindow();
   }
-});
-
-// IPC handlers for feature modules
-ipcMain.handle('purchase-blocking:get-rules', async () => {
-  // Stub: Return mock blocking rules
-  return [];
-});
-
-ipcMain.handle('card-masking:generate-card', async () => {
-  // Stub: Return mock virtual card
-  return { number: '4111-XXXX-XXXX-1234', expiry: '12/25', cvv: '***' };
-});
-
-ipcMain.handle('auto-negotiation:get-subscriptions', async () => {
-  // Stub: Return mock subscriptions
-  return [];
 });

@@ -3,9 +3,19 @@
 
 const express = require('express');
 const cors = require('cors');
+const AUTONOMY_DEFAULTS = require('./shared/autonomy-defaults.json');
+
+// ==================== CONFIGURATION ====================
+const CONFIG = {
+  PORT: process.env.PORT || 3001,
+  LIMITS: {
+    MAX_PAGE_ANALYSES: 50,
+    MAX_RISK_EVENTS: 100,
+  },
+  AUTONOMY_DEFAULTS,
+};
 
 const app = express();
-const PORT = 3001;
 
 // Enable CORS for extension
 app.use(cors({
@@ -25,16 +35,8 @@ let extensionData = {
   riskEvents: []
 };
 
-// Autonomy settings store
-let autonomySettings = {
-  level: 'moderate',
-  dailySpendingLimit: 200,
-  maxShoppingTime: 60,
-  blockCheckoutAbove: 100,
-  autoRedirectOnRisk: false,
-  enforceColingOff: true,
-  coolingOffMinutes: 5
-};
+// Autonomy settings store (initialized from config defaults)
+let autonomySettings = { ...CONFIG.AUTONOMY_DEFAULTS };
 
 // Sync endpoint - receives data from extension
 app.post('/api/extension/sync', (req, res) => {
@@ -58,13 +60,13 @@ app.post('/api/extension/sync', (req, res) => {
 app.post('/api/extension/page-analysis', (req, res) => {
   const analysis = req.body;
 
-  // Store recent analyses (keep last 50)
+  // Store recent analyses (keep last N)
   extensionData.pageAnalyses.unshift({
     ...analysis,
     receivedAt: Date.now()
   });
-  if (extensionData.pageAnalyses.length > 50) {
-    extensionData.pageAnalyses = extensionData.pageAnalyses.slice(0, 50);
+  if (extensionData.pageAnalyses.length > CONFIG.LIMITS.MAX_PAGE_ANALYSES) {
+    extensionData.pageAnalyses = extensionData.pageAnalyses.slice(0, CONFIG.LIMITS.MAX_PAGE_ANALYSES);
   }
 
   // Track risk events
@@ -73,8 +75,8 @@ app.post('/api/extension/page-analysis', (req, res) => {
       ...analysis,
       eventType: 'risk_detected'
     });
-    if (extensionData.riskEvents.length > 100) {
-      extensionData.riskEvents = extensionData.riskEvents.slice(0, 100);
+    if (extensionData.riskEvents.length > CONFIG.LIMITS.MAX_RISK_EVENTS) {
+      extensionData.riskEvents = extensionData.riskEvents.slice(0, CONFIG.LIMITS.MAX_RISK_EVENTS);
     }
   }
 
@@ -193,7 +195,7 @@ app.post('/api/autonomy/check', (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`[SubGuard API] Server running on http://localhost:${PORT}`);
+app.listen(CONFIG.PORT, () => {
+  console.log(`[SubGuard API] Server running on http://localhost:${CONFIG.PORT}`);
   console.log('[SubGuard API] Waiting for Chrome extension connections...');
 });

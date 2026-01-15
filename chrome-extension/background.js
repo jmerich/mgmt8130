@@ -1,7 +1,9 @@
 // SubGuard AI Background Service Worker
 // Handles data aggregation, communication, and sync with main app
 
-const SUBGUARD_API_URL = 'http://localhost:3001/api';
+import { CONFIG } from './config.js';
+
+const SUBGUARD_API_URL = CONFIG.API_URL;
 
 // Aggregated data store
 let aggregatedData = {
