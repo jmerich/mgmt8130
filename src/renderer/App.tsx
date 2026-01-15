@@ -66,11 +66,6 @@ function MobileNav({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }
               Auto-Negotiation
             </NavLink>
           </li>
-          <li>
-            <NavLink to="/demo/google-pay" onClick={onClose}>
-              Google Pay Demo
-            </NavLink>
-          </li>
         </ul>
       </nav>
     </>
@@ -144,11 +139,6 @@ function AppContent() {
             <li>
               <NavLink to="/auto-negotiation">
                 Auto-Negotiation
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/demo/google-pay">
-                Google Pay Demo
               </NavLink>
             </li>
           </ul>

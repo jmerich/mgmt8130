@@ -353,14 +353,13 @@ app.post('/api/autonomy/check', authenticateApiKey, (req, res) => {
       };
     }
 
-    // Check price threshold
+    // Check price threshold - block checkout for high autonomy, cooloff for moderate
     if (currentPrice > autonomySettings.blockCheckoutAbove && action === 'checkout') {
       decision = {
         allow: false,
-        action: 'require_cooloff',
+        action: 'block_checkout',
         reason: 'price_threshold',
-        cooloffMinutes: autonomySettings.coolingOffMinutes,
-        message: `This purchase of $${currentPrice} requires a ${autonomySettings.coolingOffMinutes}-minute cooling-off period.`
+        message: `SubGuard blocked this $${currentPrice} purchase. It exceeds your $${autonomySettings.blockCheckoutAbove} checkout limit.`
       };
     }
 

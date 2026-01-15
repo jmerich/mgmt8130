@@ -67,9 +67,9 @@ Intervention (block/warn/redirect) or Allow
 | Level | Behavior |
 |-------|----------|
 | **Minimal** | Observe and track only - no interventions |
-| **Moderate** | Gentle nudges and 5-minute cooling-off periods |
-| **High** | Active intervention with redirects and checkout blocking |
-| **Full** | Complete AI control over shopping sessions |
+| **Moderate** | Gentle nudges and risk warnings only |
+| **High** | Active intervention: blocks checkouts above price threshold, enforces time limits |
+| **Full** | Complete AI control with automatic redirects and strict limit enforcement |
 
 ---
 

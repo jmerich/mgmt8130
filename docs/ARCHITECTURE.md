@@ -288,12 +288,14 @@ flowchart TD
     F -->|Yes| G[Return: Redirect Away]
     F -->|No| H{Price > Threshold?}
 
-    H -->|Yes| I[Return: Require Cooling-Off]
+    H -->|Yes| I[Return: Block Checkout]
     H -->|No| J{Risk Level Critical?}
 
     J -->|Yes & Full Autonomy| K[Return: Redirect Away]
     J -->|No| C
 ```
+
+> **Note:** For High/Full autonomy, purchases exceeding the price threshold trigger a hard block (`block_checkout`), not a cooling-off period. This provides stricter protection for users who want maximum intervention.
 
 ---
 
