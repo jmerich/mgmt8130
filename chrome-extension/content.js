@@ -482,12 +482,20 @@
     closeBtn.onclick = closeOverlay;
     dismissBtn.onclick = closeOverlay;
 
+    // Dashboard link also closes overlay
+    dashboardLink.onclick = function() {
+      closeOverlay();
+    };
+
     // Click outside modal to close
     overlay.onclick = function(e) {
       if (e.target === overlay) {
         closeOverlay();
       }
     };
+
+    // Auto-dismiss after 30 seconds as failsafe
+    setTimeout(closeOverlay, 30000);
 
     // Stop modal clicks from bubbling
     modal.onclick = function(e) {

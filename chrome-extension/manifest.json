@@ -21,8 +21,14 @@
     {
       "matches": ["<all_urls>"],
       "exclude_matches": [
-        "*://localhost/*",
-        "*://127.0.0.1/*",
+        "http://localhost/*",
+        "http://localhost:*/*",
+        "https://localhost/*",
+        "https://localhost:*/*",
+        "http://127.0.0.1/*",
+        "http://127.0.0.1:*/*",
+        "https://127.0.0.1/*",
+        "https://127.0.0.1:*/*",
         "*://*.google.com/*",
         "*://*.gmail.com/*",
         "*://*.github.com/*",
