@@ -73,13 +73,16 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     notification: Omit<SmartNotification, 'id' | 'timestamp' | 'read' | 'dismissed'>
   ) => {
     setNotifications(prev => {
-      // Check for duplicate notifications (same type and title within last 5 seconds)
+      // Check for duplicate notifications
+      // mood-alert: 2 minute cooldown to prevent spam
+      // others: 5 second cooldown
       const now = Date.now();
+      const cooldownMs = notification.type === 'mood-alert' ? 120000 : 5000;
       const isDuplicate = prev.some(n =>
         n.type === notification.type &&
         n.title === notification.title &&
         !n.dismissed &&
-        (now - n.timestamp.getTime()) < 5000
+        (now - n.timestamp.getTime()) < cooldownMs
       );
 
       if (isDuplicate) {
@@ -154,14 +157,18 @@ export const NotificationToast: React.FC<ToastProps> = ({
 
   useEffect(() => {
     // Auto-dismiss timing based on priority
-    // urgent/high = no auto-dismiss (user must interact)
+    // urgent = 20 seconds
+    // high = 15 seconds
     // medium = 8 seconds
     // low = 5 seconds
-    if (notification.priority === 'urgent' || notification.priority === 'high') {
-      return; // Don't auto-dismiss important notifications
+    let dismissTime: number;
+    if (notification.priority === 'urgent') {
+      dismissTime = 20000;
+    } else if (notification.priority === 'high') {
+      dismissTime = 15000;
+    } else {
+      dismissTime = notification.priority === 'medium' ? 8000 : 5000;
     }
-
-    const dismissTime = notification.priority === 'medium' ? 8000 : 5000;
     const timer = setTimeout(() => {
       if (!dismissedRef.current) {
         dismissedRef.current = true;

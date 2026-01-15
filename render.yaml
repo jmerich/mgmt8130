@@ -1,0 +1,24 @@
+# Render Blueprint - SubGuard API Server
+# https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: subguard-api
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node src/api-server.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: SUPABASE_URL
+        sync: false  # Set manually in dashboard
+      - key: SUPABASE_SERVICE_KEY
+        sync: false  # Set manually in dashboard
+      - key: SUBGUARD_API_KEY
+        generateValue: true  # Auto-generate secure random key
+      - key: ALLOWED_ORIGINS
+        sync: false  # Set to your Vercel URL after deployment
