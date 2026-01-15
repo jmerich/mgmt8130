@@ -1155,3 +1155,189 @@ html, body {
     bottom: calc(var(--space-md) + env(safe-area-inset-bottom));
   }
 }
+
+/* ================================================
+   MOOD INTELLIGENCE STYLES
+   ================================================ */
+
+/* Forecast Section */
+.forecast-section {
+  margin-bottom: var(--space-xl);
+}
+
+/* Mood Status Card */
+.mood-status-card {
+  background: var(--bg-card);
+  border-radius: var(--border-radius-lg);
+  padding: var(--space-lg);
+  margin-top: var(--space-md);
+  border-left: 4px solid #4caf50;
+  box-shadow: var(--shadow-sm);
+}
+
+.mood-status-card.risk-low {
+  border-left-color: #4caf50;
+}
+
+.mood-status-card.risk-moderate {
+  border-left-color: #ff9800;
+  background: linear-gradient(135deg, #fff8e1 0%, var(--bg-card) 100%);
+}
+
+.mood-status-card.risk-high {
+  border-left-color: #f44336;
+  background: linear-gradient(135deg, #ffebee 0%, var(--bg-card) 100%);
+}
+
+.mood-status-card.risk-critical {
+  border-left-color: #d32f2f;
+  background: linear-gradient(135deg, #ffcdd2 0%, var(--bg-card) 100%);
+  animation: criticalPulse 2s ease-in-out infinite;
+}
+
+@keyframes criticalPulse {
+  0%, 100% {
+    box-shadow: var(--shadow-sm);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(244, 67, 54, 0.3);
+  }
+}
+
+.mood-status-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.mood-status-header .mood-emoji {
+  font-size: 2.5rem;
+}
+
+.mood-status-header .mood-info {
+  flex: 1;
+}
+
+.mood-status-header .mood-label {
+  display: block;
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mood-status-header .mood-value {
+  display: block;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  text-transform: capitalize;
+}
+
+.risk-indicator {
+  text-align: center;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-card-hover);
+  border-radius: var(--border-radius-md);
+}
+
+.risk-indicator .risk-score {
+  display: block;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+}
+
+.risk-indicator .risk-label {
+  display: block;
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+}
+
+.mood-triggers {
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border-color);
+}
+
+.mood-triggers strong {
+  display: block;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-xs);
+}
+
+.mood-triggers ul {
+  margin: 0;
+  padding-left: var(--space-lg);
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+}
+
+.mood-triggers li {
+  margin-bottom: var(--space-xs);
+}
+
+.mood-recommendation {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-sm);
+  color: #2e7d32;
+}
+
+.mood-recommendation .rec-icon {
+  font-size: var(--font-size-lg);
+  flex-shrink: 0;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .forecast-section {
+    margin: 0 calc(-1 * var(--space-md)) var(--space-lg);
+  }
+
+  .forecast-section > div {
+    border-radius: 0;
+  }
+
+  .mood-status-card {
+    margin: 0;
+    border-radius: 0;
+    border-left: none;
+    border-top: 4px solid;
+  }
+
+  .mood-status-header {
+    flex-wrap: wrap;
+  }
+
+  .mood-status-header .mood-emoji {
+    font-size: 2rem;
+  }
+
+  .mood-status-header .mood-value {
+    font-size: var(--font-size-lg);
+  }
+
+  .risk-indicator {
+    width: 100%;
+    margin-top: var(--space-sm);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .risk-indicator .risk-score {
+    font-size: var(--font-size-xl);
+  }
+
+  .risk-indicator .risk-label {
+    font-size: var(--font-size-sm);
+  }
+}

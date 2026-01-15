@@ -1,0 +1,712 @@
+/**
+ * Purchase Intercept Screen Styles
+ *
+ * Full-screen intervention UI with swipe gestures,
+ * risk gauge, mood analysis, and breathing exercises.
+ */
+
+/* Overlay */
+.purchase-intercept-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease;
+}
+
+.purchase-intercept-overlay.animating {
+  animation: fadeOut 0.5s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.intercept-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+}
+
+/* Container */
+.intercept-container {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 1rem;
+  transition: transform 0.1s ease-out;
+}
+
+.intercept-container.decision-approved {
+  animation: swipeRight 0.5s ease forwards;
+}
+
+.intercept-container.decision-blocked {
+  animation: swipeLeft 0.5s ease forwards;
+}
+
+@keyframes swipeRight {
+  to {
+    transform: translateX(150%) rotate(15deg);
+    opacity: 0;
+  }
+}
+
+@keyframes swipeLeft {
+  to {
+    transform: translateX(-150%) rotate(-15deg);
+    opacity: 0;
+  }
+}
+
+/* Swipe Indicators */
+.swipe-indicator {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 1.1rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 10;
+}
+
+.swipe-indicator.left {
+  left: -80px;
+  color: #f44336;
+}
+
+.swipe-indicator.right {
+  right: -80px;
+  color: #4caf50;
+}
+
+.swipe-indicator.active {
+  opacity: 1;
+}
+
+.swipe-icon {
+  font-size: 2.5rem;
+}
+
+/* Main Card */
+.intercept-card {
+  background: var(--bg-card, #ffffff);
+  border-radius: var(--border-radius-xl, 20px);
+  overflow: hidden;
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  touch-action: pan-y;
+  user-select: none;
+}
+
+/* Header */
+.intercept-header {
+  position: relative;
+  padding: 1.25rem;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-bottom: 3px solid;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.alert-pulse {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.2);
+  }
+}
+
+.header-content {
+  flex: 1;
+}
+
+.header-content h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.risk-label {
+  margin: 0.25rem 0 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.close-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  font-size: 1.5rem;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Purchase Info */
+.purchase-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: var(--bg-card-hover, #f8f9fa);
+  border-bottom: 1px solid var(--border-color, #e0e0e0);
+}
+
+.merchant-logo {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--border-radius-md, 12px);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.merchant-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.merchant-initial {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.purchase-details {
+  flex: 1;
+}
+
+.purchase-details h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary, #1a1a2e);
+}
+
+.category-badge {
+  display: inline-block;
+  margin-top: 0.25rem;
+  padding: 0.2rem 0.6rem;
+  background: var(--color-primary-light, #e3f2fd);
+  color: var(--color-primary, #1976d2);
+  font-size: 0.7rem;
+  font-weight: 600;
+  border-radius: 100px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.purchase-amount {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary, #1a1a2e);
+}
+
+/* Risk Gauge */
+.risk-gauge-container {
+  padding: 1.5rem 1.25rem;
+  text-align: center;
+  background: var(--bg-card, #ffffff);
+}
+
+.risk-gauge {
+  width: 180px;
+  height: 90px;
+}
+
+.risk-score {
+  margin-top: -0.5rem;
+}
+
+.score-value {
+  display: block;
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--text-primary, #1a1a2e);
+  line-height: 1;
+}
+
+.score-label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-secondary, #666);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 0.25rem;
+}
+
+/* Mood Analysis */
+.mood-analysis {
+  padding: 0 1.25rem 1.25rem;
+}
+
+.mood-badge {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--bg-card-hover, #f8f9fa);
+  border-radius: var(--border-radius-md, 12px);
+  border: 1px solid var(--border-color, #e0e0e0);
+}
+
+.mood-emoji {
+  font-size: 2.5rem;
+}
+
+.mood-info {
+  flex: 1;
+}
+
+.mood-label {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-secondary, #666);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mood-value {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary, #1a1a2e);
+  text-transform: capitalize;
+}
+
+.confidence {
+  text-align: right;
+}
+
+.confidence-value {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-primary, #1976d2);
+}
+
+.confidence-label {
+  display: block;
+  font-size: 0.65rem;
+  color: var(--text-secondary, #666);
+  text-transform: uppercase;
+}
+
+/* Triggers Section */
+.triggers-section {
+  padding: 0 1.25rem 1.25rem;
+}
+
+.triggers-section h4 {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary, #666);
+}
+
+.trigger-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.trigger-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  font-size: 0.9rem;
+  color: var(--text-primary, #1a1a2e);
+  border-bottom: 1px solid var(--border-color-light, #f0f0f0);
+}
+
+.trigger-item:last-child {
+  border-bottom: none;
+}
+
+.trigger-icon {
+  flex-shrink: 0;
+}
+
+/* AI Recommendation */
+.ai-recommendation {
+  display: flex;
+  gap: 1rem;
+  margin: 0 1.25rem 1.25rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  border-radius: var(--border-radius-md, 12px);
+  border: 1px solid #a5d6a7;
+}
+
+.ai-avatar {
+  font-size: 1.75rem;
+  flex-shrink: 0;
+}
+
+.recommendation-content {
+  flex: 1;
+}
+
+.recommendation-content strong {
+  display: block;
+  font-size: 0.75rem;
+  color: #2e7d32;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.25rem;
+}
+
+.recommendation-content p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #1b5e20;
+  line-height: 1.4;
+}
+
+/* Breathing Exercise */
+.breathing-exercise {
+  padding: 1.5rem 1.25rem;
+  text-align: center;
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  border-top: 1px solid #90caf9;
+}
+
+.breath-circle {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 1rem;
+  border-radius: 50%;
+  background: rgba(25, 118, 210, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 4s ease-in-out;
+}
+
+.breath-circle.inhale {
+  transform: scale(1.3);
+  background: rgba(25, 118, 210, 0.3);
+}
+
+.breath-circle.hold {
+  transform: scale(1.3);
+  background: rgba(25, 118, 210, 0.4);
+}
+
+.breath-circle.exhale {
+  transform: scale(1);
+  background: rgba(25, 118, 210, 0.2);
+}
+
+.breath-text {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1565c0;
+}
+
+/* Cooldown Timer */
+.cooldown-active {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0 1.25rem 1.25rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  border-radius: var(--border-radius-md, 12px);
+  border: 1px solid #ffcc80;
+}
+
+.cooldown-icon {
+  font-size: 1.75rem;
+}
+
+.cooldown-info {
+  flex: 1;
+}
+
+.cooldown-label {
+  display: block;
+  font-size: 0.75rem;
+  color: #e65100;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cooldown-time {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #bf360c;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Action Buttons */
+.intercept-actions {
+  padding: 1.25rem;
+  background: var(--bg-card-hover, #f8f9fa);
+  border-top: 1px solid var(--border-color, #e0e0e0);
+}
+
+.breathing-btn {
+  width: 100%;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border: none;
+  background: linear-gradient(135deg, #42a5f5 0%, #1976d2 100%);
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: var(--border-radius-md, 12px);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.breathing-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.4);
+}
+
+.breathing-btn:active {
+  transform: translateY(0);
+}
+
+.delay-options {
+  text-align: center;
+}
+
+.delay-label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-secondary, #666);
+  margin-bottom: 0.75rem;
+}
+
+.delay-buttons {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.delay-btn {
+  flex: 1;
+  max-width: 100px;
+  padding: 0.75rem;
+  border: 2px solid var(--border-color, #e0e0e0);
+  background: var(--bg-card, #ffffff);
+  color: var(--text-primary, #1a1a2e);
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: var(--border-radius-md, 8px);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.delay-btn:hover {
+  border-color: var(--color-primary, #1976d2);
+  background: var(--color-primary-light, #e3f2fd);
+  color: var(--color-primary, #1976d2);
+}
+
+/* Swipe Instruction */
+.swipe-instruction {
+  padding: 1rem 1.25rem 1.5rem;
+  text-align: center;
+}
+
+.swipe-arrows {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.arrow {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.arrow.left {
+  color: #f44336;
+}
+
+.arrow.right {
+  color: #4caf50;
+}
+
+.swipe-text {
+  font-size: 0.8rem;
+  color: var(--text-secondary, #666);
+  animation: swipeHint 2s ease-in-out infinite;
+}
+
+@keyframes swipeHint {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ================================================
+   MOBILE RESPONSIVE STYLES
+   ================================================ */
+@media (max-width: 768px) {
+  .intercept-container {
+    margin: 0.5rem;
+    max-width: none;
+  }
+
+  .swipe-indicator {
+    display: none;
+  }
+
+  .intercept-header {
+    padding: 1rem;
+  }
+
+  .header-content h2 {
+    font-size: 1rem;
+  }
+
+  .purchase-info {
+    padding: 1rem;
+  }
+
+  .merchant-logo {
+    width: 48px;
+    height: 48px;
+  }
+
+  .purchase-amount {
+    font-size: 1.25rem;
+  }
+
+  .risk-gauge-container {
+    padding: 1rem;
+  }
+
+  .risk-gauge {
+    width: 150px;
+    height: 75px;
+  }
+
+  .score-value {
+    font-size: 2rem;
+  }
+
+  .mood-badge {
+    padding: 0.75rem;
+    gap: 0.75rem;
+  }
+
+  .mood-emoji {
+    font-size: 2rem;
+  }
+
+  .trigger-item {
+    font-size: 0.85rem;
+  }
+
+  .ai-recommendation {
+    margin: 0 1rem 1rem;
+    padding: 0.75rem;
+  }
+
+  .breathing-exercise {
+    padding: 1rem;
+  }
+
+  .breath-circle {
+    width: 100px;
+    height: 100px;
+  }
+
+  .intercept-actions {
+    padding: 1rem;
+  }
+
+  .breathing-btn {
+    padding: 0.875rem;
+    font-size: 0.95rem;
+  }
+
+  .delay-btn {
+    padding: 0.6rem;
+    font-size: 0.85rem;
+  }
+}
+
+/* Small phones */
+@media (max-width: 375px) {
+  .intercept-card {
+    border-radius: var(--border-radius-lg, 16px);
+  }
+
+  .purchase-info {
+    flex-wrap: wrap;
+  }
+
+  .purchase-amount {
+    width: 100%;
+    text-align: center;
+    margin-top: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-color-light, #f0f0f0);
+  }
+
+  .delay-buttons {
+    flex-wrap: wrap;
+  }
+
+  .delay-btn {
+    min-width: 80px;
+  }
+}

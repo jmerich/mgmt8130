@@ -7,16 +7,28 @@ import { AutoNegotiationPage } from './features/auto-negotiation/AutoNegotiation
 import { NetflixMockPage } from './features/demo/NetflixMockPage';
 import { GooglePayMockPage } from './features/demo/GooglePayMockPage';
 import { CONFIG, type AutonomyLevel } from '../config';
-import { requestNotificationPermission, sendNotification } from './main';
+// Mood Intelligence imports
+import {
+  NotificationProvider,
+  ToastContainer,
+  NotificationCenter,
+  NotificationBell,
+  useMoodDetection,
+  useSmartNotificationGenerator,
+} from './features/mood-intelligence';
+import { SpendingForecast } from './features/mood-intelligence/SpendingForecast';
 import './styles/theme.css';
 import './App.css';
 
 function App() {
   return (
     <ToastProvider>
-      <BrowserRouter>
-        <AppContent />
-      </BrowserRouter>
+      <NotificationProvider>
+        <BrowserRouter>
+          <AppContent />
+          <ToastContainer maxVisible={3} />
+        </BrowserRouter>
+      </NotificationProvider>
     </ToastProvider>
   );
 }
@@ -68,32 +80,10 @@ function MobileNav({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }
 function AppContent() {
   const location = useLocation();
   const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = React.useState(false);
+  const [notificationCenterOpen, setNotificationCenterOpen] = React.useState(false);
 
   // Check if we are on a demo page
   const isDemo = location.pathname.includes('/demo/');
-
-  // Check notification permission on mount
-  React.useEffect(() => {
-    if ('Notification' in window) {
-      setNotificationsEnabled(Notification.permission === 'granted');
-    }
-  }, []);
-
-  const handleNotificationToggle = async () => {
-    if (notificationsEnabled) {
-      // Can't revoke programmatically, just inform user
-      alert('To disable notifications, use your browser settings.');
-    } else {
-      const granted = await requestNotificationPermission();
-      setNotificationsEnabled(granted);
-      if (granted) {
-        sendNotification('SubGuard Notifications Enabled', {
-          body: 'You will receive alerts for blocked purchases and spending limits.',
-        });
-      }
-    }
-  };
 
   return (
     <div className="app">
@@ -110,15 +100,15 @@ function AppContent() {
           <div className="mobile-logo">
             Sub<span>Guard</span>
           </div>
-          <button
-            className={`notification-btn ${notificationsEnabled ? 'has-notifications' : ''}`}
-            onClick={handleNotificationToggle}
-            aria-label="Toggle notifications"
-          >
-            {notificationsEnabled ? '🔔' : '🔕'}
-          </button>
+          <NotificationBell onClick={() => setNotificationCenterOpen(true)} />
         </header>
       )}
+
+      {/* Notification Center Panel */}
+      <NotificationCenter
+        isOpen={notificationCenterOpen}
+        onClose={() => setNotificationCenterOpen(false)}
+      />
 
       {/* Mobile Navigation */}
       {!isDemo && (
@@ -207,6 +197,25 @@ function Dashboard() {
   const [extensionConnected, setExtensionConnected] = React.useState(false);
   const [autonomySettings, setAutonomySettings] = React.useState<AutonomySettings>(DEFAULT_AUTONOMY);
   const [settingsSaved, setSettingsSaved] = React.useState(false);
+
+  // Mood detection hook
+  const { moodPrediction, startTracking, stopTracking } = useMoodDetection();
+  const { generateMoodAlert, generateInsight } = useSmartNotificationGenerator();
+
+  // Generate mood alerts when risk is high
+  React.useEffect(() => {
+    if (moodPrediction && (moodPrediction.riskLevel === 'high' || moodPrediction.riskLevel === 'critical')) {
+      generateMoodAlert(moodPrediction);
+    }
+  }, [moodPrediction?.riskLevel]);
+
+  // Start mood tracking on mount
+  React.useEffect(() => {
+    startTracking();
+    // Generate welcome insight
+    generateInsight('SubGuard is now monitoring your browsing patterns to predict impulse risk.');
+    return () => stopTracking();
+  }, []);
 
   // Fetch extension data periodically
   React.useEffect(() => {
@@ -317,6 +326,56 @@ function Dashboard() {
             <span className="savings-desc">negotiated savings</span>
           </div>
         </div>
+      </div>
+
+      {/* Mood-Aware Spending Forecast */}
+      <div className="forecast-section">
+        <SpendingForecast
+          monthlyBudget={autonomySettings.dailySpendingLimit * 30}
+          currentSpent={savingsData.blockedPurchases.amount + 450}
+          historicalData={[]}
+        />
+
+        {/* Current Mood Status */}
+        {moodPrediction && (
+          <div className={`mood-status-card risk-${moodPrediction.riskLevel}`}>
+            <div className="mood-status-header">
+              <span className="mood-emoji">
+                {moodPrediction.primaryMood === 'stressed' && '😰'}
+                {moodPrediction.primaryMood === 'bored' && '😑'}
+                {moodPrediction.primaryMood === 'happy' && '😊'}
+                {moodPrediction.primaryMood === 'sad' && '😢'}
+                {moodPrediction.primaryMood === 'anxious' && '😟'}
+                {moodPrediction.primaryMood === 'neutral' && '😐'}
+                {moodPrediction.primaryMood === 'euphoric' && '🤑'}
+              </span>
+              <div className="mood-info">
+                <span className="mood-label">Current Mood</span>
+                <span className="mood-value">{moodPrediction.primaryMood}</span>
+              </div>
+              <div className="risk-indicator">
+                <span className="risk-score">{moodPrediction.impulseRiskScore}</span>
+                <span className="risk-label">Risk Score</span>
+              </div>
+            </div>
+            {moodPrediction.triggers.length > 0 && (
+              <div className="mood-triggers">
+                <strong>Active Triggers:</strong>
+                <ul>
+                  {moodPrediction.triggers.slice(0, 2).map((trigger, i) => (
+                    <li key={i}>{trigger}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {moodPrediction.recommendations.length > 0 && (
+              <div className="mood-recommendation">
+                <span className="rec-icon">💡</span>
+                <span>{moodPrediction.recommendations[0]}</span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Browser Extension Activity */}
