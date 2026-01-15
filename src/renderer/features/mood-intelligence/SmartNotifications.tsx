@@ -72,15 +72,30 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const addNotification = useCallback((
     notification: Omit<SmartNotification, 'id' | 'timestamp' | 'read' | 'dismissed'>
   ) => {
-    const newNotification: SmartNotification = {
-      ...notification,
-      id: `notif-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      timestamp: new Date(),
-      read: false,
-      dismissed: false,
-    };
+    setNotifications(prev => {
+      // Check for duplicate notifications (same type and title within last 5 seconds)
+      const now = Date.now();
+      const isDuplicate = prev.some(n =>
+        n.type === notification.type &&
+        n.title === notification.title &&
+        !n.dismissed &&
+        (now - n.timestamp.getTime()) < 5000
+      );
 
-    setNotifications(prev => [newNotification, ...prev].slice(0, 50)); // Keep last 50
+      if (isDuplicate) {
+        return prev; // Don't add duplicate
+      }
+
+      const newNotification: SmartNotification = {
+        ...notification,
+        id: `notif-${now}-${Math.random().toString(36).substr(2, 9)}`,
+        timestamp: new Date(),
+        read: false,
+        dismissed: false,
+      };
+
+      return [newNotification, ...prev].slice(0, 50); // Keep last 50
+    });
   }, []);
 
   const dismissNotification = useCallback((id: string) => {

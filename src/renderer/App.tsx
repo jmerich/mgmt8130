@@ -223,7 +223,8 @@ function Dashboard() {
       // Reset when risk goes back to normal
       lastAlertedRiskRef.current = null;
     }
-  }, [moodPrediction?.riskLevel, generateMoodAlert]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [moodPrediction?.riskLevel]); // Only trigger on risk level change, not on generateMoodAlert changes
 
   // Start mood tracking on mount
   React.useEffect(() => {
