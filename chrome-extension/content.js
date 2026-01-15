@@ -371,7 +371,8 @@
 
   // Show block overlay (for checkout blocking)
   function showBlockOverlay(decision) {
-    if (overlayVisible) return;
+    // Remove any existing overlay first
+    removeOverlay();
 
     const overlay = createElement('div');
     overlay.id = 'subguard-autonomy-overlay';
@@ -380,14 +381,15 @@
     overlay.style.cssText = 'position:fixed!important;top:0!important;left:0!important;width:100vw!important;height:100vh!important;background:rgba(0,0,0,0.95)!important;z-index:2147483647!important;display:flex!important;align-items:center!important;justify-content:center!important;font-family:system-ui,sans-serif!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;';
 
     const modal = createElement('div', 'subguard-autonomy-modal');
-    modal.style.cssText = 'background:linear-gradient(145deg,#1a1a2e,#16213e);border-radius:24px;width:90%;max-width:520px;padding:0;box-shadow:0 30px 100px rgba(239,68,68,0.4);color:white;text-align:center;';
+    modal.style.cssText = 'background:linear-gradient(145deg,#1a1a2e,#16213e);border-radius:24px;width:90%;max-width:520px;padding:0;box-shadow:0 30px 100px rgba(239,68,68,0.4);color:white;text-align:center;pointer-events:auto!important;';
 
     const header = createElement('div', 'autonomy-header');
     header.style.cssText = 'padding:30px 24px 20px;background:linear-gradient(135deg,rgba(239,68,68,0.2),rgba(185,28,28,0.2));border-bottom:1px solid rgba(255,255,255,0.1);position:relative;';
 
-    // Close button
+    // Close button - larger and more visible
     const closeBtn = createElement('button', 'close-btn', '\u00D7');
-    closeBtn.style.cssText = 'position:absolute;top:12px;right:12px;width:32px;height:32px;border:none;background:rgba(255,255,255,0.1);color:white;font-size:20px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;';
+    closeBtn.type = 'button';
+    closeBtn.style.cssText = 'position:absolute;top:12px;right:12px;width:40px;height:40px;border:none;background:rgba(255,255,255,0.2);color:white;font-size:24px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;pointer-events:auto!important;z-index:10;';
     header.appendChild(closeBtn);
 
     const icon = createElement('div', 'autonomy-icon', '\uD83D\uDEAB');
@@ -406,7 +408,7 @@
     reason.style.cssText = 'font-size:16px;color:#f87171;margin:0 0 12px 0;font-weight:500;';
     message.appendChild(reason);
 
-    const helpText = createElement('p', null, 'This is helping you stick to your financial goals.');
+    const helpText = createElement('p', null, 'This is helping you stick to your financial goals. Press ESC or click X to close.');
     helpText.style.cssText = 'font-size:14px;color:rgba(255,255,255,0.7);margin:0;';
     message.appendChild(helpText);
     modal.appendChild(message);
@@ -414,63 +416,68 @@
     const actions = createElement('div', 'autonomy-actions');
     actions.style.cssText = 'padding:0 24px 24px;display:flex;gap:12px;flex-direction:column;';
 
-    const backBtn = createElement('button', 'autonomy-btn accept', 'Go Back to Shopping');
-    backBtn.style.cssText = 'padding:14px 24px;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;background:linear-gradient(135deg,#22c55e,#16a34a);color:white;';
+    const dismissBtn = createElement('button', 'autonomy-btn dismiss', 'Dismiss');
+    dismissBtn.type = 'button';
+    dismissBtn.style.cssText = 'padding:14px 24px;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;background:linear-gradient(135deg,#6366f1,#4f46e5);color:white;pointer-events:auto!important;';
 
-    const dashboardBtn = createElement('button', 'autonomy-btn secondary', 'View Dashboard');
-    dashboardBtn.style.cssText = 'padding:14px 24px;border:1px solid rgba(255,255,255,0.2);border-radius:12px;font-size:16px;cursor:pointer;background:transparent;color:white;';
+    const dashboardLink = createElement('a', 'autonomy-link', 'Open Dashboard');
+    dashboardLink.href = CONFIG.DASHBOARD_URL;
+    dashboardLink.target = '_blank';
+    dashboardLink.style.cssText = 'padding:14px 24px;border:1px solid rgba(255,255,255,0.3);border-radius:12px;font-size:16px;cursor:pointer;background:transparent;color:white;text-decoration:none;display:block;text-align:center;pointer-events:auto!important;';
 
-    actions.appendChild(backBtn);
-    actions.appendChild(dashboardBtn);
+    actions.appendChild(dismissBtn);
+    actions.appendChild(dashboardLink);
     modal.appendChild(actions);
 
     overlay.appendChild(modal);
 
-    // Use setTimeout to ensure it shows after any page scripts run
-    setTimeout(() => {
-      // Try documentElement first, then body
-      (document.documentElement || document.body).appendChild(overlay);
-      overlayVisible = true;
-      console.log('[SubGuard] Block overlay shown!');
-    }, 50);
-
-    closeBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
+    // Helper to close overlay
+    function closeOverlay() {
+      console.log('[SubGuard] Closing overlay');
       overlay.remove();
       overlayVisible = false;
-    });
+      document.removeEventListener('keydown', escHandler);
+    }
 
-    // Stop clicks on modal from closing overlay
-    modal.addEventListener('click', (e) => {
-      e.stopPropagation();
-    });
-
-    backBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      overlay.remove();
-      overlayVisible = false;
-      // Redirect to Google
-      window.location.href = 'https://www.google.com';
-    });
-
-    dashboardBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      overlay.remove();
-      overlayVisible = false;
-      // Open dashboard in new tab to avoid losing shopping context
-      window.open(CONFIG.DASHBOARD_URL, '_blank');
-    });
-
-    // Also allow clicking the overlay background to dismiss
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) {
-        overlay.remove();
-        overlayVisible = false;
+    // ESC key handler
+    function escHandler(e) {
+      if (e.key === 'Escape') {
+        closeOverlay();
       }
-    });
+    }
+
+    // Append to DOM immediately
+    (document.documentElement || document.body).appendChild(overlay);
+    overlayVisible = true;
+    console.log('[SubGuard] Block overlay shown!');
+
+    // Add event listeners AFTER element is in DOM
+    closeBtn.onclick = closeOverlay;
+    dismissBtn.onclick = closeOverlay;
+
+    // Click outside modal to close
+    overlay.onclick = function(e) {
+      if (e.target === overlay) {
+        closeOverlay();
+      }
+    };
+
+    // Stop modal clicks from bubbling
+    modal.onclick = function(e) {
+      e.stopPropagation();
+    };
+
+    // ESC key to close
+    document.addEventListener('keydown', escHandler);
+  }
+
+  // Helper to remove any existing overlay
+  function removeOverlay() {
+    const existing = document.getElementById('subguard-autonomy-overlay');
+    if (existing) {
+      existing.remove();
+    }
+    overlayVisible = false;
   }
 
   // Show cooling-off overlay
