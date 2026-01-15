@@ -135,6 +135,7 @@ export const NotificationToast: React.FC<ToastProps> = ({
   onAction,
 }) => {
   const [isExiting, setIsExiting] = useState(false);
+  const dismissedRef = React.useRef(false);
 
   useEffect(() => {
     // Auto-dismiss timing based on priority
@@ -147,23 +148,34 @@ export const NotificationToast: React.FC<ToastProps> = ({
 
     const dismissTime = notification.priority === 'medium' ? 8000 : 5000;
     const timer = setTimeout(() => {
-      setIsExiting(true);
-      setTimeout(onDismiss, 300);
+      if (!dismissedRef.current) {
+        dismissedRef.current = true;
+        setIsExiting(true);
+        setTimeout(onDismiss, 300);
+      }
     }, dismissTime);
     return () => clearTimeout(timer);
   }, [notification.priority, onDismiss]);
 
-  const handleDismiss = () => {
-    if (isExiting) return; // Prevent double-dismiss
+  const handleDismiss = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (dismissedRef.current) return; // Prevent double-dismiss
+    dismissedRef.current = true;
     setIsExiting(true);
-    setTimeout(onDismiss, 300);
+    // Call dismiss immediately, animation is just visual
+    onDismiss();
   };
 
-  const handleAction = () => {
-    if (isExiting) return; // Prevent double-dismiss
+  const handleAction = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (dismissedRef.current) return; // Prevent double-dismiss
+    dismissedRef.current = true;
     setIsExiting(true);
     if (onAction) onAction();
-    setTimeout(onDismiss, 300);
+    // Call dismiss immediately
+    onDismiss();
   };
 
   const getIcon = (): string => {
@@ -208,18 +220,25 @@ interface ToastContainerProps {
 export const ToastContainer: React.FC<ToastContainerProps> = ({ maxVisible = 3 }) => {
   const { notifications, dismissNotification, markAsRead } = useNotifications();
   const [visibleToasts, setVisibleToasts] = useState<SmartNotification[]>([]);
+  // Track dismissed IDs to prevent flicker on re-render
+  const dismissedIdsRef = React.useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    // Show only unread, non-dismissed notifications
+    // Show only unread, non-dismissed notifications (also check local dismissed set)
     const activeNotifications = notifications
-      .filter(n => !n.dismissed && !n.read)
+      .filter(n => !n.dismissed && !n.read && !dismissedIdsRef.current.has(n.id))
       .slice(0, maxVisible);
     setVisibleToasts(activeNotifications);
   }, [notifications, maxVisible]);
 
   const handleDismiss = (id: string) => {
+    // Add to local dismissed set immediately
+    dismissedIdsRef.current.add(id);
+    // Update state
     dismissNotification(id);
     markAsRead(id);
+    // Force immediate re-filter
+    setVisibleToasts(prev => prev.filter(n => n.id !== id));
   };
 
   if (visibleToasts.length === 0) return null;
