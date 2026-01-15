@@ -247,7 +247,161 @@ Alternatively, demonstrate card masking from the Card Masking page in the dashbo
 | Card Masking | http://localhost:5173/card-masking |
 | Auto-Negotiation | http://localhost:5173/auto-negotiation |
 | Netflix Mock | http://localhost:5173/demo/netflix |
+| Google Pay Mock | http://localhost:5173/demo/google-pay |
 | API Health | http://localhost:3001/api/health |
+
+---
+
+## Mobile Demo (Pixel 6 / Android)
+
+SubGuard includes a Progressive Web App (PWA) that can be installed on mobile devices for a native app-like experience.
+
+### Mobile Setup
+
+#### Option 1: Same WiFi Network (Recommended)
+
+1. Find your computer's local IP address:
+   ```bash
+   # On Linux/Mac:
+   ip addr | grep "inet " | grep -v 127.0.0.1
+
+   # On Windows:
+   ipconfig | findstr /i "IPv4"
+   ```
+
+2. Start the app with host binding:
+   ```bash
+   npm run dev:web
+   ```
+
+3. On your Pixel 6, open Chrome and navigate to:
+   ```
+   http://YOUR_COMPUTER_IP:5173
+   ```
+   Example: `http://192.168.1.100:5173`
+
+#### Option 2: USB Debugging (More Reliable)
+
+1. Enable Developer Options on Pixel 6:
+   - Settings → About phone → Tap "Build number" 7 times
+   - Settings → System → Developer options → Enable USB debugging
+
+2. Connect phone via USB cable
+
+3. Forward the port using ADB:
+   ```bash
+   adb reverse tcp:5173 tcp:5173
+   adb reverse tcp:3001 tcp:3001
+   ```
+
+4. On your Pixel 6, open Chrome and navigate to:
+   ```
+   http://localhost:5173
+   ```
+
+### Installing the PWA
+
+1. Open SubGuard in Chrome on your phone
+2. Tap the three-dot menu (⋮)
+3. Select **"Add to Home screen"** or **"Install app"**
+4. The SubGuard icon will appear on your home screen
+5. Open from home screen - it runs in standalone mode (no browser UI)
+
+### Mobile Demo Script (2 Minutes)
+
+#### Part 1: PWA Installation & Dashboard (0:00 - 0:45)
+
+1. **Show the PWA installation:**
+   - "SubGuard is a Progressive Web App - it can be installed like a native app."
+   - Open from home screen icon
+   - "Notice it runs full-screen without browser chrome."
+
+2. **Dashboard walkthrough:**
+   - Show savings overview (scrolls naturally on mobile)
+   - Demonstrate the mobile navigation (hamburger menu)
+   - "The interface is fully responsive and touch-optimized."
+
+3. **Enable notifications:**
+   - Tap the notification bell (🔕 → 🔔)
+   - "Users can receive push notifications for blocked purchases."
+
+#### Part 2: Google Pay Integration Demo (0:45 - 2:00)
+
+1. **Navigate to Google Pay Demo:**
+   - Use hamburger menu → "Google Pay Demo"
+   - "This shows how SubGuard integrates with mobile payments."
+
+2. **Show the payment flow:**
+   - "A user is about to subscribe to Netflix for $19.99/month."
+   - Point out the **SubGuard Protected** card is pre-selected
+   - "The virtual card masks their real payment details."
+
+3. **Complete the payment:**
+   - Tap **"Pay with Google Pay"**
+   - Confirm payment
+   - Show processing animation
+   - **Success screen** with "Protected by SubGuard" badge
+
+4. **Demonstrate blocking (optional):**
+   - Go back and select "Personal Card" instead
+   - Attempt payment
+   - Show the **blocked** screen
+   - "SubGuard detected an unprotected card and blocked the payment."
+   - Tap "Use Protected Card" to switch back
+
+5. **Show notification:**
+   - If notifications enabled, a push notification appears
+   - "Users get instant feedback on their mobile device."
+
+### Mobile Demo Flow
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     MOBILE DEMO FLOW (2 MIN)                     │
+└─────────────────────────────────────────────────────────────────┘
+
+    SETUP                PART 1                    PART 2
+   ────────             ────────                  ────────
+      │                    │                         │
+      ▼                    ▼                         ▼
+┌───────────┐       ┌───────────┐            ┌───────────────┐
+│ Install   │──────▶│ Dashboard │───────────▶│  Google Pay   │
+│ PWA       │       │ Mobile UI │            │  Mock Payment │
+└───────────┘       └───────────┘            └───────────────┘
+      │                    │                         │
+      ▼                    ▼                         ▼
+• Add to home        • Hamburger nav          • Protected card
+  screen             • Savings view           • Payment flow
+• Open standalone    • Enable notifs          • Success/Block
+```
+
+### Mobile Talking Points
+
+**"Why a PWA instead of a native app?"**
+> "PWAs offer the best of both worlds - native app feel with web development speed. Users can install instantly without app store approval, and we can push updates immediately."
+
+**"Does it work offline?"**
+> "Yes, the service worker caches the app shell. Users can view their dashboard and settings offline. Real-time features require connectivity."
+
+**"What about iOS?"**
+> "PWAs work on iOS Safari too, though with some limitations. A native iOS app could be developed for deeper integration with Apple Pay."
+
+### Mobile Troubleshooting
+
+**Can't connect from phone:**
+1. Ensure computer and phone are on same WiFi network
+2. Check if firewall is blocking port 5173
+3. Try USB debugging method instead
+
+**PWA won't install:**
+1. Make sure you're using Chrome (not Samsung Browser)
+2. The site must be served over localhost or HTTPS
+3. Try clearing Chrome cache
+
+**Notifications not working:**
+1. Check Chrome notification permissions in phone Settings
+2. Ensure "Do Not Disturb" is off
+3. Some notification features require HTTPS in production
 
 ---
 

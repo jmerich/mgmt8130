@@ -719,3 +719,464 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ==================== MOBILE PWA STYLES ==================== */
+
+/* Mobile Navigation */
+.mobile-header {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+  color: white;
+  z-index: 1000;
+  padding: 0 1rem;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.mobile-header .mobile-logo {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.mobile-header .mobile-logo span {
+  color: #00f3ff;
+}
+
+.hamburger-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Mobile Navigation Overlay */
+.mobile-nav-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1001;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.mobile-nav-overlay.open {
+  opacity: 1;
+}
+
+.mobile-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 280px;
+  height: 100%;
+  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+  z-index: 1002;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  padding-top: 80px;
+}
+
+.mobile-nav.open {
+  transform: translateX(0);
+}
+
+.mobile-nav-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.mobile-nav .nav-links {
+  padding: 0;
+}
+
+.mobile-nav .nav-links a {
+  padding: 1rem 1.5rem;
+  font-size: 1.1rem;
+  border-left: 4px solid transparent;
+}
+
+.mobile-nav .nav-links a.active {
+  border-left-color: #00f3ff;
+  background: rgba(0, 243, 255, 0.1);
+}
+
+/* Notification Bell */
+.notification-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  position: relative;
+}
+
+.notification-btn.has-notifications::after {
+  content: '';
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  background: #ef4444;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+/* Mobile Layout Adjustments */
+@media (max-width: 768px) {
+  .mobile-header {
+    display: flex;
+  }
+
+  .mobile-nav-overlay {
+    display: block;
+    pointer-events: none;
+  }
+
+  .mobile-nav-overlay.open {
+    pointer-events: auto;
+  }
+
+  .mobile-nav {
+    display: block;
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  .app {
+    flex-direction: column;
+  }
+
+  .content {
+    padding-top: 60px;
+  }
+
+  .content.full-width {
+    padding-top: 0;
+  }
+
+  .dashboard {
+    padding: 1rem;
+  }
+
+  .dashboard h2 {
+    font-size: 1.5rem;
+  }
+
+  /* Savings Hero Mobile */
+  .savings-hero {
+    padding: 1.5rem 1rem;
+    border-radius: 0;
+    margin: -1rem -1rem 1rem -1rem;
+  }
+
+  .savings-amount {
+    font-size: 2.5rem;
+  }
+
+  .savings-breakdown {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .savings-item {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 1rem;
+    text-align: left;
+    padding: 0.75rem 1rem;
+  }
+
+  .savings-icon {
+    margin-bottom: 0;
+    font-size: 1.75rem;
+  }
+
+  .savings-stat {
+    font-size: 1.25rem;
+  }
+
+  /* Browser Stats Mobile */
+  .browser-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .browser-stat-card {
+    padding: 1rem;
+  }
+
+  .browser-stat-card .stat-value {
+    font-size: 1.5rem;
+  }
+
+  /* Autonomy Section Mobile */
+  .autonomy-section {
+    border-radius: 12px;
+    padding: 1rem;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .autonomy-levels {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .autonomy-level-btn {
+    padding: 1rem 0.75rem;
+  }
+
+  .level-icon {
+    font-size: 1.5rem;
+  }
+
+  .level-name {
+    font-size: 0.85rem;
+  }
+
+  .level-desc {
+    font-size: 0.7rem;
+  }
+
+  .autonomy-description {
+    padding: 1rem;
+  }
+
+  .autonomy-features {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .autonomy-settings-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .setting-card {
+    padding: 0.75rem;
+  }
+
+  .setting-input input {
+    font-size: 1rem;
+    padding: 0.6rem;
+  }
+
+  /* Feature Cards Mobile */
+  .feature-cards {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .feature-card {
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .feature-icon {
+    font-size: 2rem;
+    margin-bottom: 0;
+    flex-shrink: 0;
+  }
+
+  .feature-card h3 {
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .feature-card p {
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .feature-card .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+  }
+
+  /* Activity List Mobile */
+  .activity-item {
+    padding: 0.75rem;
+  }
+
+  .activity-domain {
+    font-size: 0.9rem;
+  }
+
+  .extension-prompt {
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .prompt-icon {
+    font-size: 2rem;
+  }
+
+  .install-steps {
+    font-size: 0.8rem;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 380px) {
+  .savings-amount {
+    font-size: 2rem;
+  }
+
+  .autonomy-levels {
+    grid-template-columns: 1fr;
+  }
+
+  .autonomy-settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .browser-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Touch-friendly improvements */
+@media (pointer: coarse) {
+  .btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .autonomy-level-btn {
+    min-height: 80px;
+  }
+
+  .nav-links a {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+  }
+
+  .setting-input input {
+    min-height: 44px;
+  }
+}
+
+/* PWA Install Prompt */
+.pwa-install-prompt {
+  position: fixed;
+  bottom: 1rem;
+  left: 1rem;
+  right: 1rem;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  color: white;
+  padding: 1rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.pwa-install-prompt .pwa-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.pwa-install-prompt .pwa-content {
+  flex: 1;
+}
+
+.pwa-install-prompt .pwa-title {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.pwa-install-prompt .pwa-desc {
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.pwa-install-prompt .pwa-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.pwa-install-prompt .pwa-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+.pwa-install-prompt .pwa-btn.primary {
+  background: #00f3ff;
+  color: #1a1a2e;
+}
+
+.pwa-install-prompt .pwa-btn.secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+/* Safe area insets for notched phones */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .mobile-header {
+    padding-top: env(safe-area-inset-top);
+    height: calc(60px + env(safe-area-inset-top));
+  }
+
+  .content {
+    padding-top: calc(60px + env(safe-area-inset-top));
+  }
+
+  .mobile-nav {
+    padding-top: calc(80px + env(safe-area-inset-top));
+  }
+
+  .pwa-install-prompt {
+    bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
+}

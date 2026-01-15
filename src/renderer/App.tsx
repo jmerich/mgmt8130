@@ -1,11 +1,13 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, NavLink, useLocation } from 'react-router-dom';
 import { ToastProvider } from './components/Toast';
 import { PurchaseBlockingPage } from './features/purchase-blocking/PurchaseBlockingPage';
 import { CardMaskingPage } from './features/card-masking/CardMaskingPage';
 import { AutoNegotiationPage } from './features/auto-negotiation/AutoNegotiationPage';
 import { NetflixMockPage } from './features/demo/NetflixMockPage';
+import { GooglePayMockPage } from './features/demo/GooglePayMockPage';
 import { CONFIG, type AutonomyLevel } from '../config';
+import { requestNotificationPermission, sendNotification } from './main';
 import './App.css';
 
 function App() {
@@ -18,13 +20,114 @@ function App() {
   );
 }
 
+// Mobile Navigation Component
+function MobileNav({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  return (
+    <>
+      <div
+        className={`mobile-nav-overlay ${isOpen ? 'open' : ''}`}
+        onClick={onClose}
+      />
+      <nav className={`mobile-nav ${isOpen ? 'open' : ''}`}>
+        <button className="mobile-nav-close" onClick={onClose}>
+          ✕
+        </button>
+        <ul className="nav-links">
+          <li>
+            <NavLink to="/" end onClick={onClose}>
+              Dashboard
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/purchase-blocking" onClick={onClose}>
+              Purchase Blocking
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/card-masking" onClick={onClose}>
+              Card Masking
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/auto-negotiation" onClick={onClose}>
+              Auto-Negotiation
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/demo/google-pay" onClick={onClose}>
+              Google Pay Demo
+            </NavLink>
+          </li>
+        </ul>
+      </nav>
+    </>
+  );
+}
+
 function AppContent() {
-  const location = window.location;
+  const location = useLocation();
+  const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = React.useState(false);
+
   // Check if we are on a demo page
   const isDemo = location.pathname.includes('/demo/');
 
+  // Check notification permission on mount
+  React.useEffect(() => {
+    if ('Notification' in window) {
+      setNotificationsEnabled(Notification.permission === 'granted');
+    }
+  }, []);
+
+  const handleNotificationToggle = async () => {
+    if (notificationsEnabled) {
+      // Can't revoke programmatically, just inform user
+      alert('To disable notifications, use your browser settings.');
+    } else {
+      const granted = await requestNotificationPermission();
+      setNotificationsEnabled(granted);
+      if (granted) {
+        sendNotification('SubGuard Notifications Enabled', {
+          body: 'You will receive alerts for blocked purchases and spending limits.',
+        });
+      }
+    }
+  };
+
   return (
     <div className="app">
+      {/* Mobile Header */}
+      {!isDemo && (
+        <header className="mobile-header">
+          <button
+            className="hamburger-btn"
+            onClick={() => setMobileNavOpen(true)}
+            aria-label="Open menu"
+          >
+            ☰
+          </button>
+          <div className="mobile-logo">
+            Sub<span>Guard</span>
+          </div>
+          <button
+            className={`notification-btn ${notificationsEnabled ? 'has-notifications' : ''}`}
+            onClick={handleNotificationToggle}
+            aria-label="Toggle notifications"
+          >
+            {notificationsEnabled ? '🔔' : '🔕'}
+          </button>
+        </header>
+      )}
+
+      {/* Mobile Navigation */}
+      {!isDemo && (
+        <MobileNav
+          isOpen={mobileNavOpen}
+          onClose={() => setMobileNavOpen(false)}
+        />
+      )}
+
+      {/* Desktop Sidebar */}
       {!isDemo && (
         <nav className="sidebar">
           <div className="logo">
@@ -52,6 +155,11 @@ function AppContent() {
                 Auto-Negotiation
               </NavLink>
             </li>
+            <li>
+              <NavLink to="/demo/google-pay">
+                Google Pay Demo
+              </NavLink>
+            </li>
           </ul>
         </nav>
       )}
@@ -63,6 +171,7 @@ function AppContent() {
           <Route path="/card-masking" element={<CardMaskingPage />} />
           <Route path="/auto-negotiation" element={<AutoNegotiationPage />} />
           <Route path="/demo/netflix" element={<NetflixMockPage />} />
+          <Route path="/demo/google-pay" element={<GooglePayMockPage />} />
         </Routes>
       </main>
     </div>
