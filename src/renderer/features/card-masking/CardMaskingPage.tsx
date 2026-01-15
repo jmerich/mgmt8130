@@ -14,6 +14,7 @@ export function CardMaskingPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const { showToast } = useToast();
   const [adobeStatus, setAdobeStatus] = useState<'safe' | 'zombie' | 'cancelling' | 'terminated'>('zombie');
+  const [spotifyStatus, setSpotifyStatus] = useState<'safe' | 'terminated'>('safe');
   const [graveyard, setGraveyard] = useState<{ id: string; service: string; deathTime: string; entropy: string }[]>([]);
   const [showGraveyard, setShowGraveyard] = useState(false);
 
@@ -52,9 +53,11 @@ export function CardMaskingPage() {
     // 1. Remove from Graveyard
     setGraveyard(prev => prev.filter(i => i.id !== item.id));
 
-    // 2. Logic specific to Adobe for this demo
-    if (item.service === 'Adobe Creative Cloud') {
-      setAdobeStatus('safe'); // Set to 'safe' so it appears active/shiny in the matrix
+    // 2. Logic specific to Adobe/Spotify for this demo
+    if (item.service.includes('Adobe')) {
+      setAdobeStatus('safe');
+    } else if (item.service.includes('Spotify')) {
+      setSpotifyStatus('safe');
     }
 
     // 3. Add Log to Feed
@@ -76,7 +79,7 @@ export function CardMaskingPage() {
 
   const [feedItems, setFeedItems] = useState([
     { id: 2, type: 'auto', time: '2h ago', service: 'Adobe Creative Cloud', action: 'trial started', badge: 'Auto-Generated Virtual Card', badgeClass: 'generated' },
-    { id: 3, type: 'success', time: '5h ago', service: 'Spotify', action: 'payment authorized ($11.99)', badge: 'Approved', badgeClass: 'ok' }
+    { id: 3, type: 'success', time: '5h ago', service: 'Spotify Premium', action: 'payment authorized ($11.99)', badge: 'Approved', badgeClass: 'ok' }
   ]);
   const [selectedFeedItem, setSelectedFeedItem] = useState<any>(null);
   const [provisioning, setProvisioning] = useState<string | null>(null);
@@ -381,11 +384,15 @@ export function CardMaskingPage() {
                   setFeedItems(prev => prev.map(item => item.id === selectedFeedItem.id ? newItem : item));
 
                   // Update Global State (Sentience Matrix)
-                  if (selectedFeedItem.service === 'Adobe Creative Cloud') {
+                  if (selectedFeedItem.service.includes('Adobe')) {
                     setAdobeStatus('terminated');
+                    showToast('Value Matrix Updated: Adobe Terminated', 'success', '📉');
+                  } else if (selectedFeedItem.service.includes('Spotify')) {
+                    setSpotifyStatus('terminated');
+                    showToast('Value Matrix Updated: Spotify Terminated', 'success', '📉');
                   }
 
-                  // Move to Graveyard
+                  // Move to Graveyard with specific ID for re-instatement tracking
                   const deadSub = {
                     id: `${selectedFeedItem.service.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`,
                     service: selectedFeedItem.service,
@@ -439,8 +446,9 @@ export function CardMaskingPage() {
           )}
 
           {/* Static Mock Nodes */}
+          {/* Dynamic Spotify Node */}
           <div className="smart-node">
-            <div className="entropy-orb pulse-stable"></div>
+            <div className={`entropy-orb ${spotifyStatus === 'safe' ? 'pulse-stable' : 'pulse-dead'}`}></div>
             <div className="node-header">
               <span className="node-service">Spotify</span>
               <span className="node-price">$11.99/mo</span>
@@ -448,19 +456,28 @@ export function CardMaskingPage() {
             <div className="node-metrics">
               <div className="metric" data-tooltip="Utilization vs Cost ratio">
                 <span className="metric-label">Efficiency</span>
-                <span className="metric-value">84%</span>
+                <span className="metric-value">{spotifyStatus === 'safe' ? '84%' : '0%'}</span>
               </div>
               <div className="metric" data-tooltip="Cost Per Dopamine hit">
                 <span className="metric-label">CPD (Dopamine)</span>
-                <span className="metric-value">$0.01</span>
+                <span className="metric-value">{spotifyStatus === 'safe' ? '$0.01' : '--'}</span>
               </div>
             </div>
-            <div className="ai-insight insight-stable">
-              <strong>Verdict: HIGH UTILITY</strong><br />
-              Your "Gym Playlist" keeps this alive. Cost per hour is negligible. Essential infrastructure.
-            </div>
+
+            {spotifyStatus === 'safe' ? (
+              <div className="ai-insight insight-stable">
+                <strong>Verdict: HIGH UTILITY</strong><br />
+                Your "Gym Playlist" keeps this alive. Cost per hour is negligible. Essential infrastructure.
+              </div>
+            ) : (
+              <div className="ai-insight insight-stable" style={{ borderColor: '#34c759' }}>
+                <strong style={{ color: '#34c759' }}>✓ TERMINATION COMPLETE</strong><br />
+                $11.99/mo saved.
+              </div>
+            )}
+
             <div className="entropy-score">
-              ENTROPY: 12.5 (LOW)
+              ENTROPY: {spotifyStatus === 'safe' ? '12.5 (LOW)' : '0.0 (NEUTRALIZED)'}
             </div>
           </div>
 
