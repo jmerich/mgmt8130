@@ -202,18 +202,28 @@ function Dashboard() {
   const { moodPrediction, startTracking, stopTracking } = useMoodDetection();
   const { generateMoodAlert, generateInsight } = useSmartNotificationGenerator();
 
+  // Track if we've already shown an alert for the current risk level
+  const lastAlertedRiskRef = React.useRef<string | null>(null);
+
   // Generate mood alerts when risk is high
   React.useEffect(() => {
     if (moodPrediction && (moodPrediction.riskLevel === 'high' || moodPrediction.riskLevel === 'critical')) {
-      generateMoodAlert(moodPrediction, () => {
-        // Scroll to mood status card when "View Details" is clicked
-        const moodCard = document.querySelector('.mood-status-card');
-        if (moodCard) {
-          moodCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      });
+      // Only show alert if risk level changed to prevent duplicates
+      if (lastAlertedRiskRef.current !== moodPrediction.riskLevel) {
+        lastAlertedRiskRef.current = moodPrediction.riskLevel;
+        generateMoodAlert(moodPrediction, () => {
+          // Scroll to mood status card when "View Details" is clicked
+          const moodCard = document.querySelector('.mood-status-card');
+          if (moodCard) {
+            moodCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        });
+      }
+    } else {
+      // Reset when risk goes back to normal
+      lastAlertedRiskRef.current = null;
     }
-  }, [moodPrediction?.riskLevel]);
+  }, [moodPrediction?.riskLevel, generateMoodAlert]);
 
   // Start mood tracking on mount
   React.useEffect(() => {

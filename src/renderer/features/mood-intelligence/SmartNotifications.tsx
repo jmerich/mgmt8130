@@ -137,14 +137,20 @@ export const NotificationToast: React.FC<ToastProps> = ({
   const [isExiting, setIsExiting] = useState(false);
 
   useEffect(() => {
-    // Auto-dismiss after 5 seconds for non-urgent notifications
-    if (notification.priority !== 'urgent') {
-      const timer = setTimeout(() => {
-        setIsExiting(true);
-        setTimeout(onDismiss, 300);
-      }, 5000);
-      return () => clearTimeout(timer);
+    // Auto-dismiss timing based on priority
+    // urgent/high = no auto-dismiss (user must interact)
+    // medium = 8 seconds
+    // low = 5 seconds
+    if (notification.priority === 'urgent' || notification.priority === 'high') {
+      return; // Don't auto-dismiss important notifications
     }
+
+    const dismissTime = notification.priority === 'medium' ? 8000 : 5000;
+    const timer = setTimeout(() => {
+      setIsExiting(true);
+      setTimeout(onDismiss, 300);
+    }, dismissTime);
+    return () => clearTimeout(timer);
   }, [notification.priority, onDismiss]);
 
   const handleDismiss = () => {
