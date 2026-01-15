@@ -443,17 +443,24 @@
     const actions = createElement('div', 'autonomy-actions');
     actions.style.cssText = 'padding:0 24px 24px;display:flex;gap:12px;flex-direction:column;';
 
-    const dismissBtn = createElement('button', 'autonomy-btn dismiss', 'Dismiss');
-    dismissBtn.type = 'button';
-    dismissBtn.style.cssText = 'padding:14px 24px;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;background:linear-gradient(135deg,#6366f1,#4f46e5);color:white;pointer-events:auto!important;';
+    // Go Back to Shopping button - closes overlay and stays on page
+    const backBtn = createElement('button', 'autonomy-btn back', 'Go Back to Shopping');
+    backBtn.type = 'button';
+    backBtn.style.cssText = 'padding:14px 24px;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;background:linear-gradient(135deg,#22c55e,#16a34a);color:white;pointer-events:auto!important;';
 
-    const dashboardLink = createElement('a', 'autonomy-link', 'Open Dashboard');
-    dashboardLink.href = CONFIG.DASHBOARD_URL;
-    dashboardLink.target = '_blank';
-    dashboardLink.style.cssText = 'padding:14px 24px;border:1px solid rgba(255,255,255,0.3);border-radius:12px;font-size:16px;cursor:pointer;background:transparent;color:white;text-decoration:none;display:block;text-align:center;pointer-events:auto!important;';
+    // View Dashboard button - opens dashboard in same tab
+    const dashboardBtn = createElement('button', 'autonomy-btn dashboard', 'View Dashboard');
+    dashboardBtn.type = 'button';
+    dashboardBtn.style.cssText = 'padding:14px 24px;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;background:linear-gradient(135deg,#6366f1,#4f46e5);color:white;pointer-events:auto!important;';
 
-    actions.appendChild(dismissBtn);
-    actions.appendChild(dashboardLink);
+    // Dismiss text link
+    const dismissLink = createElement('button', 'dismiss-link', 'Dismiss (ESC)');
+    dismissLink.type = 'button';
+    dismissLink.style.cssText = 'padding:8px;border:none;background:transparent;color:rgba(255,255,255,0.5);font-size:14px;cursor:pointer;text-decoration:underline;pointer-events:auto!important;';
+
+    actions.appendChild(backBtn);
+    actions.appendChild(dashboardBtn);
+    actions.appendChild(dismissLink);
     modal.appendChild(actions);
 
     overlay.appendChild(modal);
@@ -480,11 +487,19 @@
 
     // Add event listeners AFTER element is in DOM
     closeBtn.onclick = closeOverlay;
-    dismissBtn.onclick = closeOverlay;
+    dismissLink.onclick = closeOverlay;
 
-    // Dashboard link also closes overlay
-    dashboardLink.onclick = function() {
+    // Go Back to Shopping - just closes overlay, stays on current page
+    backBtn.onclick = function() {
+      console.log('[SubGuard] Go Back to Shopping clicked');
       closeOverlay();
+    };
+
+    // View Dashboard - navigates to dashboard
+    dashboardBtn.onclick = function() {
+      console.log('[SubGuard] View Dashboard clicked');
+      closeOverlay();
+      window.location.href = CONFIG.DASHBOARD_URL;
     };
 
     // Click outside modal to close
