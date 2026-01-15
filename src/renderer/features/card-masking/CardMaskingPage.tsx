@@ -54,11 +54,23 @@ export function CardMaskingPage() {
 
     // 2. Logic specific to Adobe for this demo
     if (item.service === 'Adobe Creative Cloud') {
-      setAdobeStatus('zombie'); // Revert to initial state for demo
+      setAdobeStatus('safe'); // Set to 'safe' so it appears active/shiny in the matrix
     }
 
-    // 3. Show Toast & Close
-    showToast(`Resurrected ${item.service} with new Masked Card`, 'success', '💎');
+    // 3. Add Log to Feed
+    const newLog = {
+      id: Date.now(),
+      type: 'success',
+      time: 'Just now',
+      service: item.service,
+      action: 'manually reinstated',
+      badge: 'Protection Active',
+      badgeClass: 'ok'
+    };
+    setFeedItems(prev => [newLog, ...prev]);
+
+    // 4. Show Toast & Close
+    showToast(`Resurrected ${item.service}`, 'success', '💎');
     setTimeout(() => setShowGraveyard(false), 500);
   };
 
@@ -367,6 +379,21 @@ export function CardMaskingPage() {
                     action: 'subscription terminated'
                   };
                   setFeedItems(prev => prev.map(item => item.id === selectedFeedItem.id ? newItem : item));
+
+                  // Update Global State (Sentience Matrix)
+                  if (selectedFeedItem.service === 'Adobe Creative Cloud') {
+                    setAdobeStatus('terminated');
+                  }
+
+                  // Move to Graveyard
+                  const deadSub = {
+                    id: `${selectedFeedItem.service.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`,
+                    service: selectedFeedItem.service,
+                    deathTime: 'Just now',
+                    entropy: 'Manual Kill'
+                  };
+                  setGraveyard(prev => [deadSub, ...prev]);
+
                   setSelectedFeedItem(null);
                 }}>Destroy Card & Cancel</button>
               )}
@@ -447,11 +474,13 @@ export function CardMaskingPage() {
             <div className="node-metrics">
               <div className="metric" data-tooltip="Utilization vs Cost ratio">
                 <span className="metric-label">Efficiency</span>
-                <span className="metric-value">{adobeStatus === 'zombie' ? '4%' : '0%'}</span>
+                <span className="metric-value">{adobeStatus === 'zombie' ? '4%' : adobeStatus === 'terminated' ? '0%' : '--'}</span>
               </div>
               <div className="metric" data-tooltip="Current subscription state">
                 <span className="metric-label">Status</span>
-                <span className="metric-value">{adobeStatus === 'zombie' ? 'Active' : 'Terminated'}</span>
+                <span className="metric-value" style={{ color: adobeStatus === 'safe' ? '#aaa' : undefined }}>
+                  {adobeStatus === 'zombie' ? 'Active' : adobeStatus === 'terminated' ? 'Terminated' : 'Reinstated'}
+                </span>
               </div>
             </div>
 
@@ -473,15 +502,21 @@ export function CardMaskingPage() {
                 <strong>Initiating Protocol...</strong><br />
                 Negotiating cancellation with vendor...
               </div>
-            ) : (
+            ) : adobeStatus === 'terminated' ? (
               <div className="ai-insight insight-stable" style={{ borderColor: '#34c759' }}>
                 <strong style={{ color: '#34c759' }}>✓ TERMINATION COMPLETE</strong><br />
                 $54.99/mo saved. Entropy neutralized.
               </div>
+            ) : (
+              // Reinstated / Safe State
+              <div className="ai-insight insight-stable" style={{ borderColor: '#888', color: '#ccc' }}>
+                <strong style={{ color: '#aaa' }}>↻ MONITORING</strong><br />
+                Subscription resurrected. Re-evaluating utility...
+              </div>
             )}
 
             <div className="entropy-score">
-              ENTROPY: {adobeStatus === 'zombie' ? '99.8 (CRITICAL)' : '0.0 (NEUTRALIZED)'}
+              ENTROPY: {adobeStatus === 'zombie' ? '99.8 (CRITICAL)' : adobeStatus === 'terminated' ? '0.0 (NEUTRALIZED)' : '1.0 (RESET)'}
             </div>
           </div>
         </div>
@@ -562,8 +597,10 @@ export function CardMaskingPage() {
                 {graveyard.map(item => (
                   <div key={item.id} className="detail-row" style={{ padding: '1.5rem 0' }}>
                     <div>
-                      <div style={{ fontWeight: 'bold', color: 'white', fontSize: '1.1rem' }}>{item.service}</div>
-                      <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '0.2rem' }}>
+                      <div style={{ fontSize: '0.75rem', color: '#888', textTransform: 'uppercase', letterSpacing: '1px' }}>Service</div>
+                      <div style={{ fontWeight: 'bold', color: '#1a1a2e', fontSize: '1.2rem', marginBottom: '0.3rem' }}>{item.service}</div>
+                      <div style={{ fontSize: '0.8rem', color: '#666' }}>
+                        Type: <span style={{ color: '#aaa' }}>{item.entropy === 'Manual Kill' ? 'Manual Termination' : 'Auto-Intervention'}</span><br />
                         Time of Death: {item.deathTime}<br />
                         Final Entropy: <span style={{ color: '#ff3b30' }}>{item.entropy}</span>
                       </div>
