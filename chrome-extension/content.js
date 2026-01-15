@@ -9,12 +9,23 @@
   const hostname = window.location.hostname;
   const port = window.location.port;
   const isDashboard = (
-    (hostname === 'localhost' || hostname === '127.0.0.1') &&
-    (port === '5173' || port === '3001' || port === '')
+    (hostname === 'localhost' || hostname === '127.0.0.1')
   );
 
+  // ALWAYS remove any SubGuard overlays on localhost - even if they shouldn't exist
   if (isDashboard) {
-    console.log('[SubGuard] Dashboard detected - extension disabled on this page');
+    console.log('[SubGuard] Localhost detected - removing any overlays and exiting');
+    // Remove any existing overlays immediately
+    const overlays = document.querySelectorAll('#subguard-overlay, #subguard-autonomy-overlay, [class*="subguard"]');
+    overlays.forEach(el => el.remove());
+    // Also set up observer to remove any that get added
+    const observer = new MutationObserver((mutations) => {
+      const overlays = document.querySelectorAll('#subguard-overlay, #subguard-autonomy-overlay, [class*="subguard"]');
+      overlays.forEach(el => el.remove());
+    });
+    if (document.body) {
+      observer.observe(document.body, { childList: true, subtree: true });
+    }
     return; // Exit immediately, don't run any extension code
   }
 
