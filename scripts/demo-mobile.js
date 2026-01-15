@@ -10,6 +10,7 @@
 
 const { spawn } = require('child_process');
 const ngrok = require('ngrok');
+const qrcode = require('qrcode-terminal');
 
 const FRONTEND_PORT = 5173;
 
@@ -54,23 +55,31 @@ async function main() {
     console.log('');
     console.log('  ✅ SubGuard is ready for mobile demo!');
     console.log('');
-    console.log('  📱 Open this URL on your phone:');
+    console.log('  📱 Scan this QR code with your phone:');
     console.log('');
-    console.log(`     ${url}`);
-    console.log('');
-    console.log('  📲 To install as app:');
-    console.log('     1. Open URL in Chrome on your phone');
-    console.log('     2. Tap menu (⋮) → "Add to Home screen"');
-    console.log('');
-    console.log('  🎮 Demo pages:');
-    console.log(`     Dashboard:    ${url}`);
-    console.log(`     Google Pay:   ${url}/demo/google-pay`);
-    console.log(`     Netflix:      ${url}/demo/netflix`);
-    console.log('');
-    console.log('═══════════════════════════════════════════════════════════');
-    console.log('');
-    console.log('  Press Ctrl+C to stop');
-    console.log('');
+
+    // Generate QR code in terminal
+    qrcode.generate(url, { small: true }, (qr) => {
+      // Indent the QR code
+      const indentedQR = qr.split('\n').map(line => '     ' + line).join('\n');
+      console.log(indentedQR);
+      console.log('');
+      console.log(`  🔗 Or open: ${url}`);
+      console.log('');
+      console.log('  📲 To install as app:');
+      console.log('     1. Open URL in Chrome on your phone');
+      console.log('     2. Tap menu (⋮) → "Add to Home screen"');
+      console.log('');
+      console.log('  🎮 Demo pages:');
+      console.log(`     Dashboard:    ${url}`);
+      console.log(`     Google Pay:   ${url}/demo/google-pay`);
+      console.log(`     Netflix:      ${url}/demo/netflix`);
+      console.log('');
+      console.log('═══════════════════════════════════════════════════════════');
+      console.log('');
+      console.log('  Press Ctrl+C to stop');
+      console.log('');
+    });
 
   } catch (error) {
     console.error('');
