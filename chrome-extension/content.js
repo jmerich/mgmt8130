@@ -4,6 +4,20 @@
 (function() {
   'use strict';
 
+  // ==================== EARLY EXIT FOR DASHBOARD ====================
+  // Check IMMEDIATELY before any other code runs
+  const hostname = window.location.hostname;
+  const port = window.location.port;
+  const isDashboard = (
+    (hostname === 'localhost' || hostname === '127.0.0.1') &&
+    (port === '5173' || port === '3001' || port === '')
+  );
+
+  if (isDashboard) {
+    console.log('[SubGuard] Dashboard detected - extension disabled on this page');
+    return; // Exit immediately, don't run any extension code
+  }
+
   // ==================== CONFIGURATION ====================
   // Note: Content scripts can't use ES module imports, so config is defined inline
   // Keep in sync with chrome-extension/config.js
@@ -40,8 +54,8 @@
 
   // SubGuard dashboard URLs to exclude from monitoring
   const EXCLUDED_URLS = {
-    hostnames: ['localhost'],
-    ports: ['5173', '3001'],
+    hostnames: ['localhost', '127.0.0.1'],
+    ports: ['5173', '3001', ''],
   };
 
   // Shopping site detection patterns
@@ -170,7 +184,12 @@
   function isSubGuardDashboard() {
     const hostname = window.location.hostname;
     const port = window.location.port;
-    return EXCLUDED_URLS.hostnames.includes(hostname) && EXCLUDED_URLS.ports.includes(port);
+    // Check localhost and 127.0.0.1 with dashboard/API ports
+    if ((hostname === 'localhost' || hostname === '127.0.0.1') &&
+        (port === '5173' || port === '3001' || port === '')) {
+      return true;
+    }
+    return false;
   }
 
   // Initialize
@@ -289,6 +308,8 @@
 
   // Show redirect overlay (for full autonomy mode)
   function showRedirectOverlay(decision) {
+    // NEVER show on dashboard
+    if (isSubGuardDashboard()) return;
     if (overlayVisible) return;
 
     const overlay = createElement('div');
@@ -371,6 +392,12 @@
 
   // Show block overlay (for checkout blocking)
   function showBlockOverlay(decision) {
+    // NEVER show on dashboard
+    if (isSubGuardDashboard()) {
+      console.log('[SubGuard] Skipping overlay on dashboard');
+      return;
+    }
+
     // Remove any existing overlay first
     removeOverlay();
 
@@ -482,6 +509,8 @@
 
   // Show cooling-off overlay
   function showCooloffOverlay(decision) {
+    // NEVER show on dashboard
+    if (isSubGuardDashboard()) return;
     if (overlayVisible) return;
 
     const overlay = createElement('div');
@@ -717,6 +746,8 @@
 
   // Show intervention overlay using safe DOM methods
   function showIntervention(analysis) {
+    // NEVER show on dashboard
+    if (isSubGuardDashboard()) return;
     if (overlayVisible) return;
 
     const overlay = createElement('div');
