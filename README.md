@@ -2,6 +2,12 @@
 
 **SubGuard** is a comprehensive subscription management and purchase protection platform that combines a React dashboard with a Chrome extension to help users take control of their spending behavior through AI-powered interventions.
 
+**Contributors:**
+* Katrina Siegfried
+* Jeremy Merich
+* Nick Rocha
+* Claude Code
+
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-green.svg)
 ![React](https://img.shields.io/badge/react-18.2-blue.svg)
