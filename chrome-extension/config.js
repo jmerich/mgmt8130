@@ -32,6 +32,12 @@ export const CONFIG = {
 
   // Default cooling-off period in minutes
   DEFAULT_COOLOFF_MINUTES: 5,
+
+  // Card masking autofill settings
+  AUTOFILL: {
+    ICON_SIZE: 20,
+    ICON_OFFSET: 4,
+  },
 };
 
 // Shopping site detection patterns
@@ -116,6 +122,38 @@ export const CHECKOUT_BUTTON_PATTERNS = {
     '/basket',
     '/bag',
   ],
+};
+
+// Payment form field detection patterns (for card masking autofill)
+export const PAYMENT_FIELD_PATTERNS = {
+  cardNumber: {
+    namePatterns: ['card', 'cc', 'credit', 'cardnumber', 'ccnum', 'pan', 'account'],
+    idPatterns: ['cardNumber', 'cc-number', 'credit-card', 'ccnum', 'card-number'],
+    autocompleteValues: ['cc-number', 'card-number'],
+    placeholderPatterns: ['card number', 'credit card', '1234 5678', '4111', 'xxxx xxxx'],
+    labelPatterns: ['card number', 'credit card number', 'debit card', 'card no'],
+  },
+  expiry: {
+    namePatterns: ['exp', 'expir', 'expdate', 'cc-exp', 'valid', 'expiry'],
+    idPatterns: ['expiry', 'exp-date', 'expirationDate', 'cc-exp', 'cardExpiry'],
+    autocompleteValues: ['cc-exp', 'cc-exp-month', 'cc-exp-year'],
+    placeholderPatterns: ['mm/yy', 'mm / yy', 'expiry', 'exp date', 'mm/yyyy'],
+    labelPatterns: ['expiry', 'expiration', 'valid thru', 'exp. date', 'expires'],
+  },
+  cvv: {
+    namePatterns: ['cvv', 'cvc', 'csc', 'security', 'seccode', 'cvn', 'cv2'],
+    idPatterns: ['cvv', 'cvc', 'securityCode', 'cardCode', 'cvv2'],
+    autocompleteValues: ['cc-csc'],
+    placeholderPatterns: ['cvv', 'cvc', '123', 'security code', 'csc'],
+    labelPatterns: ['cvv', 'cvc', 'security code', 'card code', 'verification'],
+  },
+  cardholderName: {
+    namePatterns: ['cardholder', 'ccname', 'name-on-card', 'card-name', 'holdername'],
+    idPatterns: ['cardholderName', 'ccName', 'nameOnCard', 'cardHolder'],
+    autocompleteValues: ['cc-name'],
+    placeholderPatterns: ['name on card', 'cardholder', 'full name', 'name as on card'],
+    labelPatterns: ['name on card', 'cardholder name', 'card holder', 'name as it appears'],
+  },
 };
 
 // Urgency tactics (dark patterns) to detect

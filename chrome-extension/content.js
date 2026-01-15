@@ -99,10 +99,50 @@
     medium: 30,
   };
 
+  // Payment form field detection patterns (for card masking autofill)
+  const PAYMENT_FIELD_PATTERNS = {
+    cardNumber: {
+      namePatterns: ['card', 'cc', 'credit', 'cardnumber', 'ccnum', 'pan', 'account'],
+      idPatterns: ['cardNumber', 'cc-number', 'credit-card', 'ccnum', 'card-number'],
+      autocompleteValues: ['cc-number', 'card-number'],
+      placeholderPatterns: ['card number', 'credit card', '1234 5678', '4111', 'xxxx xxxx'],
+      labelPatterns: ['card number', 'credit card number', 'debit card', 'card no'],
+    },
+    expiry: {
+      namePatterns: ['exp', 'expir', 'expdate', 'cc-exp', 'valid', 'expiry'],
+      idPatterns: ['expiry', 'exp-date', 'expirationDate', 'cc-exp', 'cardExpiry'],
+      autocompleteValues: ['cc-exp', 'cc-exp-month', 'cc-exp-year'],
+      placeholderPatterns: ['mm/yy', 'mm / yy', 'expiry', 'exp date', 'mm/yyyy'],
+      labelPatterns: ['expiry', 'expiration', 'valid thru', 'exp. date', 'expires'],
+    },
+    cvv: {
+      namePatterns: ['cvv', 'cvc', 'csc', 'security', 'seccode', 'cvn', 'cv2'],
+      idPatterns: ['cvv', 'cvc', 'securityCode', 'cardCode', 'cvv2'],
+      autocompleteValues: ['cc-csc'],
+      placeholderPatterns: ['cvv', 'cvc', '123', 'security code', 'csc'],
+      labelPatterns: ['cvv', 'cvc', 'security code', 'card code', 'verification'],
+    },
+    cardholderName: {
+      namePatterns: ['cardholder', 'ccname', 'name-on-card', 'card-name', 'holdername'],
+      idPatterns: ['cardholderName', 'ccName', 'nameOnCard', 'cardHolder'],
+      autocompleteValues: ['cc-name'],
+      placeholderPatterns: ['name on card', 'cardholder', 'full name', 'name as on card'],
+      labelPatterns: ['name on card', 'cardholder name', 'card holder', 'name as it appears'],
+    },
+  };
+
+  // Card masking autofill settings
+  const AUTOFILL_CONFIG = {
+    ICON_SIZE: 20,
+    ICON_OFFSET: 4,
+  };
+
   // ==================== STATE ====================
   let pageAnalysis = null;
   let overlayVisible = false;
   let autonomySettings = null;
+  let detectedPaymentFields = []; // For card masking autofill
+  let autofillIconsInjected = false;
   let sessionData = {
     startTime: Date.now(),
     pagesVisited: 0,
@@ -134,6 +174,14 @@
     setupEventListeners();
     reportToBackground();
     checkAutonomyEnforcement();
+
+    // Card masking autofill - inject icons on checkout/payment pages
+    if (pageAnalysis?.isCheckoutPage || window.location.href.toLowerCase().includes('payment')) {
+      setTimeout(() => {
+        injectAutofillIcons();
+        setupPaymentFieldObserver();
+      }, 1000); // Delay to let page fully load
+    }
   }
 
   // Fetch autonomy settings from API
@@ -359,7 +407,8 @@
     backBtn.addEventListener('click', () => {
       overlay.remove();
       overlayVisible = false;
-      window.history.back();
+      // Redirect to Google
+      window.location.href = 'https://www.google.com';
     });
 
     dashboardBtn.addEventListener('click', () => {
@@ -450,7 +499,8 @@
       clearInterval(countdownInterval);
       overlay.remove();
       overlayVisible = false;
-      window.history.back();
+      // Redirect to Google
+      window.location.href = 'https://www.google.com';
     });
   }
 
@@ -801,11 +851,25 @@
     observer.observe(document.body, { childList: true, subtree: true });
   }
 
+  // Track elements we've already approved (more reliable than dataset)
+  const approvedClicks = new WeakSet();
+
   // Setup event listeners
   function setupEventListeners() {
     // Intercept checkout button clicks BEFORE they happen
     document.addEventListener('click', async (e) => {
       const target = e.target.closest('button, a, [role="button"], input[type="submit"]') || e.target;
+
+      // Skip if we already allowed this click (check FIRST before anything else)
+      if (approvedClicks.has(target) || approvedClicks.has(e.target) ||
+          target.dataset?.subguardAllowed === 'true' || e.target.dataset?.subguardAllowed === 'true') {
+        console.log('[SubGuard] Click already allowed, proceeding...');
+        approvedClicks.delete(target);
+        approvedClicks.delete(e.target);
+        delete target.dataset.subguardAllowed;
+        return; // Let the click through
+      }
+
       const text = (target.textContent || '').toLowerCase();
       // Handle className being SVGAnimatedString or regular string
       const rawClassName = target.className;
@@ -829,6 +893,9 @@
         e.preventDefault();
         e.stopPropagation();
         e.stopImmediatePropagation();
+
+        // Show immediate visual feedback that SubGuard is checking
+        showQuickWarning('SubGuard is checking this purchase...');
 
         console.log('[SubGuard] Click blocked, checking with API...');
 
@@ -863,7 +930,16 @@
           if (decision && !decision.allow) {
             // Show blocking overlay
             console.log('[SubGuard] BLOCKING checkout:', decision.reason);
-            handleAutonomyDecision(decision);
+
+            // Show immediate blocking notification
+            showBlockNotification(decision.message || 'SubGuard blocked this checkout to protect your financial goals.');
+
+            // Also try to show the full overlay
+            try {
+              handleAutonomyDecision(decision);
+            } catch (overlayError) {
+              console.error('[SubGuard] Overlay error:', overlayError);
+            }
 
             // Report blocked checkout
             try {
@@ -877,30 +953,40 @@
           } else {
             // API says OK - let user proceed by simulating click on original target
             console.log('[SubGuard] Checkout ALLOWED, proceeding...');
+            showQuickWarning('SubGuard approved - proceeding with checkout');
+
             // Navigate manually since we blocked the original click
             if (target.href) {
               window.location.href = target.href;
             } else if (target.form) {
               target.form.submit();
             } else {
-              // Try clicking again without our handler
+              // Mark as approved and re-click
+              approvedClicks.add(target);
+              approvedClicks.add(e.target);
               target.dataset.subguardAllowed = 'true';
-              target.click();
+
+              // Use setTimeout to ensure our handler processes the approval first
+              setTimeout(() => {
+                target.click();
+              }, 10);
             }
           }
         } catch (error) {
           console.log('[SubGuard] Autonomy check failed:', error);
           // On error, allow through
-          if (target.href) window.location.href = target.href;
+          if (target.href) {
+            window.location.href = target.href;
+          } else if (target.form) {
+            target.form.submit();
+          } else {
+            approvedClicks.add(target);
+            target.dataset.subguardAllowed = 'true';
+            setTimeout(() => target.click(), 10);
+          }
         }
 
         return false;
-      }
-
-      // Skip if we already allowed this click
-      if (target.dataset?.subguardAllowed === 'true') {
-        delete target.dataset.subguardAllowed;
-        return true;
       }
 
       // Track add to cart clicks
@@ -970,6 +1056,79 @@
     }, CONFIG.UI.TOAST_DURATION);
   }
 
+  // Show prominent block notification (more visible than toast)
+  function showBlockNotification(message) {
+    // Remove any existing block notification
+    const existing = document.getElementById('subguard-block-notification');
+    if (existing) existing.remove();
+
+    const notification = createElement('div');
+    notification.id = 'subguard-block-notification';
+    notification.style.cssText = [
+      'position: fixed',
+      'top: 20px',
+      'left: 50%',
+      'transform: translateX(-50%)',
+      'background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
+      'color: white',
+      'padding: 16px 24px',
+      'border-radius: 12px',
+      'box-shadow: 0 10px 40px rgba(220, 38, 38, 0.5)',
+      'z-index: 2147483647',
+      'font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      'font-size: 15px',
+      'font-weight: 600',
+      'display: flex',
+      'align-items: center',
+      'gap: 12px',
+      'max-width: 90vw',
+      'animation: slideDown 0.3s ease-out'
+    ].join(';');
+
+    // Add animation keyframes if not already added
+    if (!document.getElementById('subguard-block-styles')) {
+      const style = document.createElement('style');
+      style.id = 'subguard-block-styles';
+      style.textContent = '@keyframes slideDown { from { transform: translateX(-50%) translateY(-100%); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }';
+      document.head.appendChild(style);
+    }
+
+    const icon = createElement('span');
+    icon.textContent = '\uD83D\uDEAB'; // 🚫
+    icon.style.fontSize = '24px';
+
+    const textContainer = createElement('div');
+    const title = createElement('div');
+    title.textContent = 'Checkout Blocked by SubGuard';
+    title.style.marginBottom = '4px';
+
+    const desc = createElement('div');
+    desc.textContent = message;
+    desc.style.cssText = 'font-weight: 400; font-size: 13px; opacity: 0.9;';
+
+    textContainer.appendChild(title);
+    textContainer.appendChild(desc);
+
+    const closeBtn = createElement('button');
+    closeBtn.textContent = '\u00D7';
+    closeBtn.style.cssText = 'background: rgba(255,255,255,0.2); border: none; color: white; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 18px; margin-left: 8px;';
+    closeBtn.addEventListener('click', () => notification.remove());
+
+    notification.appendChild(icon);
+    notification.appendChild(textContainer);
+    notification.appendChild(closeBtn);
+
+    document.body.appendChild(notification);
+
+    // Auto-remove after 10 seconds
+    setTimeout(() => {
+      if (notification.parentElement) {
+        notification.style.animation = 'slideDown 0.3s ease-out reverse';
+        setTimeout(() => notification.remove(), 300);
+      }
+    }, 10000);
+  }
+
   // Report to background script
   function reportToBackground() {
     chrome.runtime.sendMessage({
@@ -992,6 +1151,396 @@
         // Extension was reloaded, ignore
       }
     }, CONFIG.POLLING.SESSION_UPDATE);
+  }
+
+  // ==================== CARD MASKING AUTOFILL ====================
+
+  // Detect payment form fields on the page
+  function detectPaymentFields() {
+    detectedPaymentFields = [];
+    const inputs = document.querySelectorAll('input[type="text"], input[type="tel"], input[type="number"], input:not([type])');
+
+    inputs.forEach(input => {
+      // Skip if already processed or hidden
+      if (input.dataset.subguardProcessed || !isElementVisible(input)) return;
+
+      const fieldType = identifyFieldType(input);
+      if (fieldType) {
+        detectedPaymentFields.push({ input, fieldType });
+        input.dataset.subguardProcessed = 'true';
+      }
+    });
+
+    console.log(`[SubGuard] Detected ${detectedPaymentFields.length} payment fields`);
+    return detectedPaymentFields;
+  }
+
+  // Check if element is visible
+  function isElementVisible(el) {
+    const style = window.getComputedStyle(el);
+    const rect = el.getBoundingClientRect();
+    return style.display !== 'none' &&
+           style.visibility !== 'hidden' &&
+           style.opacity !== '0' &&
+           rect.width > 0 &&
+           rect.height > 0;
+  }
+
+  // Identify the type of payment field
+  function identifyFieldType(input) {
+    const name = (input.name || '').toLowerCase();
+    const id = (input.id || '').toLowerCase();
+    const placeholder = (input.placeholder || '').toLowerCase();
+    const autocomplete = (input.autocomplete || '').toLowerCase();
+
+    // Get associated label text
+    const labelText = getAssociatedLabelText(input).toLowerCase();
+
+    // Check each field type
+    for (const [fieldType, patterns] of Object.entries(PAYMENT_FIELD_PATTERNS)) {
+      // Check name patterns
+      if (patterns.namePatterns.some(p => name.includes(p))) return fieldType;
+
+      // Check id patterns
+      if (patterns.idPatterns.some(p => id.includes(p))) return fieldType;
+
+      // Check autocomplete values
+      if (patterns.autocompleteValues.some(v => autocomplete.includes(v))) return fieldType;
+
+      // Check placeholder patterns
+      if (patterns.placeholderPatterns.some(p => placeholder.includes(p))) return fieldType;
+
+      // Check label patterns
+      if (patterns.labelPatterns.some(p => labelText.includes(p))) return fieldType;
+    }
+
+    return null;
+  }
+
+  // Get text from associated label element
+  function getAssociatedLabelText(input) {
+    // Try explicit label via for attribute
+    if (input.id) {
+      const label = document.querySelector(`label[for="${input.id}"]`);
+      if (label) return label.textContent || '';
+    }
+
+    // Try parent label
+    const parentLabel = input.closest('label');
+    if (parentLabel) return parentLabel.textContent || '';
+
+    // Try aria-labelledby
+    if (input.getAttribute('aria-labelledby')) {
+      const labelEl = document.getElementById(input.getAttribute('aria-labelledby'));
+      if (labelEl) return labelEl.textContent || '';
+    }
+
+    // Try aria-label
+    return input.getAttribute('aria-label') || '';
+  }
+
+  // Inject autofill icons next to payment fields
+  function injectAutofillIcons() {
+    if (autofillIconsInjected) return;
+
+    const fields = detectPaymentFields();
+    if (fields.length === 0) return;
+
+    console.log('[SubGuard] Injecting autofill icons for', fields.length, 'fields');
+
+    fields.forEach(({ input, fieldType }) => {
+      // Skip if icon already exists
+      if (input.parentElement?.querySelector('.subguard-autofill-icon')) return;
+
+      const icon = createAutofillIcon(fieldType, input);
+      positionAutofillIcon(icon, input);
+    });
+
+    autofillIconsInjected = true;
+  }
+
+  // Create SVG shield icon using safe DOM methods
+  function createShieldSvg(size, fillColor, strokeColor) {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('width', size.toString());
+    svg.setAttribute('height', size.toString());
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('fill', 'none');
+
+    const shieldPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    shieldPath.setAttribute('d', 'M12 2L4 6V12C4 16.4 7.4 20.5 12 22C16.6 20.5 20 16.4 20 12V6L12 2Z');
+    shieldPath.setAttribute('fill', fillColor);
+    shieldPath.setAttribute('stroke', strokeColor);
+    shieldPath.setAttribute('stroke-width', '1.5');
+
+    const checkPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    checkPath.setAttribute('d', 'M9 12L11 14L15 10');
+    checkPath.setAttribute('stroke', 'white');
+    checkPath.setAttribute('stroke-width', '2');
+    checkPath.setAttribute('stroke-linecap', 'round');
+    checkPath.setAttribute('stroke-linejoin', 'round');
+
+    svg.appendChild(shieldPath);
+    svg.appendChild(checkPath);
+    return svg;
+  }
+
+  // Create success checkmark SVG
+  function createSuccessSvg(size) {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('width', size.toString());
+    svg.setAttribute('height', size.toString());
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('fill', 'none');
+
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', '12');
+    circle.setAttribute('cy', '12');
+    circle.setAttribute('r', '10');
+    circle.setAttribute('fill', '#22c55e');
+
+    const check = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    check.setAttribute('d', 'M8 12L11 15L16 9');
+    check.setAttribute('stroke', 'white');
+    check.setAttribute('stroke-width', '2');
+    check.setAttribute('stroke-linecap', 'round');
+    check.setAttribute('stroke-linejoin', 'round');
+
+    svg.appendChild(circle);
+    svg.appendChild(check);
+    return svg;
+  }
+
+  // Create error X SVG
+  function createErrorSvg(size) {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('width', size.toString());
+    svg.setAttribute('height', size.toString());
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('fill', 'none');
+
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', '12');
+    circle.setAttribute('cy', '12');
+    circle.setAttribute('r', '10');
+    circle.setAttribute('fill', '#ef4444');
+
+    const xPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    xPath.setAttribute('d', 'M15 9L9 15M9 9L15 15');
+    xPath.setAttribute('stroke', 'white');
+    xPath.setAttribute('stroke-width', '2');
+    xPath.setAttribute('stroke-linecap', 'round');
+
+    svg.appendChild(circle);
+    svg.appendChild(xPath);
+    return svg;
+  }
+
+  // Create the autofill icon element
+  function createAutofillIcon(fieldType, inputElement) {
+    const icon = document.createElement('div');
+    icon.className = 'subguard-autofill-icon';
+    icon.dataset.fieldType = fieldType;
+    icon.title = 'Click to autofill with SubGuard masked card';
+
+    // Create SVG using safe DOM methods
+    const svg = createShieldSvg(AUTOFILL_CONFIG.ICON_SIZE, '#6366f1', '#4f46e5');
+    icon.appendChild(svg);
+
+    // Inline styles for the icon
+    icon.style.cssText = [
+      'position: absolute',
+      'width: ' + AUTOFILL_CONFIG.ICON_SIZE + 'px',
+      'height: ' + AUTOFILL_CONFIG.ICON_SIZE + 'px',
+      'cursor: pointer',
+      'z-index: 2147483646',
+      'opacity: 0.8',
+      'transition: opacity 0.2s, transform 0.2s',
+      'display: flex',
+      'align-items: center',
+      'justify-content: center'
+    ].join(';');
+
+    // Hover effects
+    icon.addEventListener('mouseenter', () => {
+      icon.style.opacity = '1';
+      icon.style.transform = 'scale(1.1)';
+    });
+    icon.addEventListener('mouseleave', () => {
+      icon.style.opacity = '0.8';
+      icon.style.transform = 'scale(1)';
+    });
+
+    // Click handler
+    icon.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      handleAutofillIconClick(fieldType, inputElement, icon);
+    });
+
+    return icon;
+  }
+
+  // Position the autofill icon relative to input field
+  function positionAutofillIcon(icon, input) {
+    const inputStyle = window.getComputedStyle(input);
+
+    // Position icon at the right edge of the input
+    const rightOffset = AUTOFILL_CONFIG.ICON_OFFSET;
+    const topOffset = (input.offsetHeight - AUTOFILL_CONFIG.ICON_SIZE) / 2;
+
+    icon.style.right = rightOffset + 'px';
+    icon.style.top = topOffset + 'px';
+
+    // Insert icon as sibling after the input
+    if (input.parentElement) {
+      // Make parent relative if not already positioned
+      const parentStyle = window.getComputedStyle(input.parentElement);
+      if (parentStyle.position === 'static') {
+        input.parentElement.style.position = 'relative';
+      }
+      input.parentElement.appendChild(icon);
+    }
+
+    // Adjust input padding to make room for icon
+    const currentPadding = parseInt(inputStyle.paddingRight) || 0;
+    const neededPadding = AUTOFILL_CONFIG.ICON_SIZE + AUTOFILL_CONFIG.ICON_OFFSET * 2;
+    input.style.paddingRight = Math.max(currentPadding, neededPadding) + 'px';
+  }
+
+  // Handle click on autofill icon
+  async function handleAutofillIconClick(fieldType, inputElement, iconElement) {
+    console.log('[SubGuard] Autofill clicked for field type:', fieldType);
+
+    // Show loading state
+    iconElement.style.opacity = '0.5';
+    iconElement.style.pointerEvents = 'none';
+
+    try {
+      // Request card from background script
+      const domain = window.location.hostname;
+      const response = await chrome.runtime.sendMessage({
+        type: 'GET_MERCHANT_CARD',
+        data: { domain }
+      });
+
+      if (response && response.card) {
+        // Fill the field with the appropriate value
+        fillPaymentField(inputElement, fieldType, response.card);
+
+        // Show success feedback
+        showAutofillSuccess(iconElement);
+
+        // Report the autofill event
+        chrome.runtime.sendMessage({
+          type: 'CARD_FIELD_FILLED',
+          data: {
+            domain,
+            fieldType,
+            timestamp: Date.now()
+          }
+        });
+      } else {
+        console.error('[SubGuard] Failed to get merchant card:', response?.error);
+        showAutofillError(iconElement, response?.error || 'Failed to get card');
+      }
+    } catch (error) {
+      console.error('[SubGuard] Autofill error:', error);
+      showAutofillError(iconElement, 'Autofill failed');
+    }
+
+    // Reset icon state
+    setTimeout(() => {
+      iconElement.style.opacity = '0.8';
+      iconElement.style.pointerEvents = 'auto';
+    }, 1000);
+  }
+
+  // Fill the payment field with card data
+  function fillPaymentField(input, fieldType, card) {
+    let value = '';
+
+    switch (fieldType) {
+      case 'cardNumber':
+        value = card.number;
+        break;
+      case 'expiry':
+        value = card.expiry;
+        break;
+      case 'cvv':
+        value = card.cvv;
+        break;
+      case 'cardholderName':
+        value = card.cardholderName;
+        break;
+    }
+
+    // Set value and trigger events to notify the page
+    input.value = value;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+
+    // Some sites use React/Vue and need additional events
+    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+    nativeInputValueSetter.call(input, value);
+    input.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+
+    console.log('[SubGuard] Filled', fieldType, 'field');
+  }
+
+  // Show success feedback on the icon
+  function showAutofillSuccess(icon) {
+    // Clear existing content
+    while (icon.firstChild) {
+      icon.removeChild(icon.firstChild);
+    }
+    icon.appendChild(createSuccessSvg(AUTOFILL_CONFIG.ICON_SIZE));
+
+    setTimeout(() => {
+      while (icon.firstChild) {
+        icon.removeChild(icon.firstChild);
+      }
+      icon.appendChild(createShieldSvg(AUTOFILL_CONFIG.ICON_SIZE, '#6366f1', '#4f46e5'));
+    }, 1500);
+  }
+
+  // Show error feedback on the icon
+  function showAutofillError(icon, message) {
+    while (icon.firstChild) {
+      icon.removeChild(icon.firstChild);
+    }
+    icon.appendChild(createErrorSvg(AUTOFILL_CONFIG.ICON_SIZE));
+    showQuickWarning(message);
+
+    setTimeout(() => {
+      while (icon.firstChild) {
+        icon.removeChild(icon.firstChild);
+      }
+      icon.appendChild(createShieldSvg(AUTOFILL_CONFIG.ICON_SIZE, '#6366f1', '#4f46e5'));
+    }, 2000);
+  }
+
+  // Setup observer for dynamically loaded payment forms
+  function setupPaymentFieldObserver() {
+    const observer = new MutationObserver((mutations) => {
+      // Check if new inputs were added
+      const hasNewInputs = mutations.some(m =>
+        Array.from(m.addedNodes).some(node =>
+          node.nodeType === 1 && (
+            node.tagName === 'INPUT' ||
+            node.querySelector?.('input')
+          )
+        )
+      );
+
+      if (hasNewInputs) {
+        // Reset flag and re-detect fields
+        autofillIconsInjected = false;
+        setTimeout(() => injectAutofillIcons(), 500);
+      }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
   }
 
   // Listen for messages from background

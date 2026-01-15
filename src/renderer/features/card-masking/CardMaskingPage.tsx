@@ -72,6 +72,20 @@ export function CardMaskingPage() {
   const [activeWallets, setActiveWallets] = useState<string[]>([]);
   const [showMethodology, setShowMethodology] = useState(false);
 
+  // Extension-generated merchant cards state
+  interface MerchantCard {
+    id: string;
+    domain: string;
+    maskedNumber: string;
+    cardType: string;
+    expiry: string;
+    createdAt: number;
+    lastUsedAt: number;
+    usageCount: number;
+  }
+  const [merchantCards, setMerchantCards] = useState<MerchantCard[]>([]);
+  const [loadingMerchantCards, setLoadingMerchantCards] = useState(false);
+
   const simulateProvisioning = (wallet: string) => {
     const isAdded = activeWallets.includes(wallet);
     setProvisioning(wallet);
@@ -93,8 +107,28 @@ export function CardMaskingPage() {
     }, 1500);
   };
 
+  // Load merchant cards from extension API
+  async function loadMerchantCards() {
+    try {
+      setLoadingMerchantCards(true);
+      const response = await fetch('http://localhost:3001/api/cards/merchant');
+      if (response.ok) {
+        const data = await response.json();
+        setMerchantCards(data.cards || []);
+      }
+    } catch (error) {
+      console.log('API not available for merchant cards');
+    } finally {
+      setLoadingMerchantCards(false);
+    }
+  }
+
   useEffect(() => {
     loadCards();
+    loadMerchantCards();
+
+    // Poll for merchant card updates every 30 seconds
+    const merchantCardInterval = setInterval(loadMerchantCards, 30000);
 
     // Listen for demo events from other tabs
     const handleStorageChange = () => {
@@ -140,6 +174,7 @@ export function CardMaskingPage() {
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       clearInterval(interval);
+      clearInterval(merchantCardInterval);
     }
   }, []);
 
@@ -452,12 +487,60 @@ export function CardMaskingPage() {
         </div>
       </div>
 
+      {/* Extension-Generated Merchant Cards */}
+      {merchantCards.length > 0 && (
+        <div className="merchant-cards-section">
+          <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.5rem' }}>
+            <span style={{ color: '#6366f1' }}>🛡️</span>
+            Extension-Generated Cards
+            <span style={{ fontSize: '0.75rem', color: '#666', fontWeight: 'normal' }}>
+              (Auto-generated for checkout protection)
+            </span>
+          </h3>
+
+          <div className="merchant-cards-grid">
+            {merchantCards.map(card => (
+              <div key={card.id} className="merchant-card-item">
+                <div className="merchant-card-header">
+                  <span className="merchant-domain">{card.domain}</span>
+                  <span className="card-type-badge">{card.cardType}</span>
+                </div>
+                <div className="merchant-card-number">{card.maskedNumber}</div>
+                <div className="merchant-card-details">
+                  <div className="detail">
+                    <span className="label">Exp</span>
+                    <span className="value">{card.expiry}</span>
+                  </div>
+                  <div className="detail">
+                    <span className="label">Uses</span>
+                    <span className="value">{card.usageCount}</span>
+                  </div>
+                  <div className="detail">
+                    <span className="label">Last Used</span>
+                    <span className="value">
+                      {card.lastUsedAt ? new Date(card.lastUsedAt).toLocaleDateString() : 'Never'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.8rem', color: '#666' }}>
+            Cards are automatically generated per-merchant when you use the autofill feature on checkout pages.
+          </div>
+        </div>
+      )}
+
       <div className="methodology-link" style={{ gap: '2rem' }}>
         <button onClick={() => setShowMethodology(true)}>
           Methodology
         </button>
         <button onClick={() => setShowGraveyard(true)} style={{ color: '#888' }}>
           View Graveyard 🪦 ({graveyard.length})
+        </button>
+        <button onClick={loadMerchantCards} style={{ color: '#6366f1' }}>
+          Refresh Extension Cards
         </button>
       </div>
 

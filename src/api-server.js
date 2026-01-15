@@ -35,6 +35,10 @@ let extensionData = {
   riskEvents: []
 };
 
+// Merchant cards store (for card masking feature)
+let merchantCards = {};
+let autofillEvents = [];
+
 // Autonomy settings store (initialized from config defaults)
 let autonomySettings = { ...CONFIG.AUTONOMY_DEFAULTS };
 
@@ -192,6 +196,97 @@ app.post('/api/autonomy/check', (req, res) => {
 
   console.log('[API] Autonomy check:', { action, decision });
   res.json(decision);
+});
+
+// ==================== CARD MASKING ENDPOINTS ====================
+
+// Receive merchant card from extension (syncs card data to API)
+app.post('/api/cards/merchant', (req, res) => {
+  const { card } = req.body;
+
+  if (!card || !card.domain) {
+    return res.status(400).json({ success: false, error: 'Missing card or domain' });
+  }
+
+  // Store/update merchant card
+  const normalizedDomain = card.domain.replace(/^www\./, '').toLowerCase();
+  merchantCards[normalizedDomain] = {
+    ...card,
+    syncedAt: Date.now()
+  };
+
+  console.log('[API] Merchant card synced:', {
+    domain: normalizedDomain,
+    maskedNumber: card.maskedNumber,
+    usageCount: card.usageCount
+  });
+
+  res.json({ success: true, card: merchantCards[normalizedDomain] });
+});
+
+// Get all merchant cards (for dashboard)
+app.get('/api/cards/merchant', (req, res) => {
+  const cards = Object.values(merchantCards).map(card => ({
+    id: card.id,
+    domain: card.domain,
+    maskedNumber: card.maskedNumber,
+    cardType: card.cardType,
+    expiry: card.expiry,
+    createdAt: card.createdAt,
+    lastUsedAt: card.lastUsedAt,
+    usageCount: card.usageCount,
+    syncedAt: card.syncedAt
+  }));
+
+  res.json({ cards });
+});
+
+// Get specific merchant card by domain
+app.get('/api/cards/merchant/:domain', (req, res) => {
+  const domain = req.params.domain.replace(/^www\./, '').toLowerCase();
+  const card = merchantCards[domain];
+
+  if (!card) {
+    return res.status(404).json({ success: false, error: 'Card not found' });
+  }
+
+  res.json({ card });
+});
+
+// Record autofill event
+app.post('/api/cards/autofill', (req, res) => {
+  const { domain, fieldType, timestamp } = req.body;
+
+  const event = {
+    id: `event_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    domain,
+    fieldType,
+    timestamp,
+    recordedAt: Date.now()
+  };
+
+  autofillEvents.unshift(event);
+
+  // Keep only last 100 events
+  if (autofillEvents.length > 100) {
+    autofillEvents = autofillEvents.slice(0, 100);
+  }
+
+  // Update card usage count if we have the card
+  const normalizedDomain = domain.replace(/^www\./, '').toLowerCase();
+  if (merchantCards[normalizedDomain]) {
+    merchantCards[normalizedDomain].lastUsedAt = timestamp;
+    merchantCards[normalizedDomain].usageCount = (merchantCards[normalizedDomain].usageCount || 0) + 1;
+  }
+
+  console.log('[API] Autofill event:', { domain, fieldType });
+
+  res.json({ success: true, event });
+});
+
+// Get autofill events (for dashboard analytics)
+app.get('/api/cards/autofill-events', (req, res) => {
+  res.json({ events: autofillEvents });
 });
 
 // Start server

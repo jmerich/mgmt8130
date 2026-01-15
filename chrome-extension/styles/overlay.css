@@ -688,3 +688,128 @@
   font-weight: 700;
   flex-shrink: 0;
 }
+
+/* ==================== CARD MASKING AUTOFILL ====================*/
+
+/* Autofill icon container */
+.subguard-autofill-icon {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  z-index: 2147483646;
+  opacity: 0.8;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.subguard-autofill-icon:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.subguard-autofill-icon:active {
+  transform: scale(0.95);
+}
+
+/* SVG styling */
+.subguard-autofill-icon svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+/* Wrapper for input positioning */
+.subguard-autofill-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+/* Tooltip on hover */
+.subguard-autofill-icon::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 10px;
+  background: linear-gradient(145deg, #1a1a2e 0%, #16213e 100%);
+  color: #e2e8f0;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  pointer-events: none;
+  z-index: 2147483647;
+  margin-bottom: 4px;
+}
+
+.subguard-autofill-icon:hover::after {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Autofill success animation */
+@keyframes autofillPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  }
+}
+
+.subguard-autofill-icon.success {
+  animation: autofillPulse 0.6s ease-out;
+}
+
+/* Error state */
+.subguard-autofill-icon.error svg path:first-child {
+  fill: #ef4444;
+  stroke: #dc2626;
+}
+
+/* Loading state */
+.subguard-autofill-icon.loading {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.subguard-autofill-icon.loading svg {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Ensure icons work well on dark and light backgrounds */
+.subguard-autofill-icon svg path:first-child {
+  fill: #6366f1;
+  stroke: #4f46e5;
+}
+
+/* Alternative light theme for very dark input backgrounds */
+@media (prefers-color-scheme: dark) {
+  .subguard-autofill-icon svg path:first-child {
+    fill: #818cf8;
+    stroke: #6366f1;
+  }
+}

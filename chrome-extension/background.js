@@ -5,6 +5,9 @@ import { CONFIG } from './config.js';
 
 const SUBGUARD_API_URL = CONFIG.API_URL;
 
+// Merchant card storage for card masking autofill
+let merchantCards = {}; // domain -> card mapping
+
 // Aggregated data store
 let aggregatedData = {
   sessions: [],
@@ -47,12 +50,16 @@ chrome.runtime.onStartup.addListener(() => {
 // Load stored data
 async function loadStoredData() {
   try {
-    const stored = await chrome.storage.local.get(['aggregatedData', 'settings']);
+    const stored = await chrome.storage.local.get(['aggregatedData', 'settings', 'merchantCards']);
     if (stored.aggregatedData) {
       aggregatedData = { ...aggregatedData, ...stored.aggregatedData };
     }
     if (stored.settings) {
       aggregatedData.settings = { ...aggregatedData.settings, ...stored.settings };
+    }
+    if (stored.merchantCards) {
+      merchantCards = stored.merchantCards;
+      console.log('[SubGuard] Loaded', Object.keys(merchantCards).length, 'merchant cards');
     }
 
     // Reset daily stats if new day
@@ -165,6 +172,16 @@ async function handleMessage(message, sender) {
       await saveData();
       return { success: true };
 
+    // Card masking autofill handlers
+    case 'GET_MERCHANT_CARD':
+      return getOrCreateMerchantCard(data.domain);
+
+    case 'CARD_FIELD_FILLED':
+      return recordAutofillEvent(data);
+
+    case 'LIST_MERCHANT_CARDS':
+      return { cards: Object.values(merchantCards) };
+
     default:
       return { success: false, error: 'Unknown message type' };
   }
@@ -189,6 +206,162 @@ async function proxyAutonomyCheck(data) {
   } catch (error) {
     console.log('[SubGuard] Autonomy check failed:', error);
     return { allow: true, error: 'Network error' };
+  }
+}
+
+// ==================== CARD MASKING FUNCTIONS ====================
+
+// Generate a Luhn-valid card number (test card starting with 4532 - Visa format)
+function generateCardNumber() {
+  // Start with a known Visa test prefix
+  const prefix = '4532';
+  let cardNumber = prefix;
+
+  // Generate 11 random digits (total 15 digits before check digit)
+  for (let i = 0; i < 11; i++) {
+    cardNumber += Math.floor(Math.random() * 10).toString();
+  }
+
+  // Calculate Luhn check digit
+  const checkDigit = calculateLuhnCheckDigit(cardNumber);
+  return cardNumber + checkDigit;
+}
+
+// Calculate the Luhn check digit for a partial card number
+function calculateLuhnCheckDigit(partialNumber) {
+  let sum = 0;
+  let isEven = true; // Since we're calculating for 15 digits, start with even
+
+  for (let i = partialNumber.length - 1; i >= 0; i--) {
+    let digit = parseInt(partialNumber[i], 10);
+
+    if (isEven) {
+      digit *= 2;
+      if (digit > 9) {
+        digit -= 9;
+      }
+    }
+
+    sum += digit;
+    isEven = !isEven;
+  }
+
+  return ((10 - (sum % 10)) % 10).toString();
+}
+
+// Generate expiry date (2+ years from now)
+function generateExpiry() {
+  const now = new Date();
+  const futureYear = now.getFullYear() + 2 + Math.floor(Math.random() * 3);
+  const month = Math.floor(Math.random() * 12) + 1;
+  const monthStr = month.toString().padStart(2, '0');
+  const yearStr = futureYear.toString().slice(-2);
+  return monthStr + '/' + yearStr;
+}
+
+// Generate CVV (3 random digits)
+function generateCVV() {
+  return Math.floor(Math.random() * 900 + 100).toString();
+}
+
+// Generate a new masked card for a merchant
+function generateMerchantCard(domain) {
+  const cardNumber = generateCardNumber();
+  return {
+    id: generateId(),
+    domain: domain,
+    number: cardNumber,
+    maskedNumber: '**** **** **** ' + cardNumber.slice(-4),
+    expiry: generateExpiry(),
+    cvv: generateCVV(),
+    cardholderName: 'SUBGUARD USER',
+    cardType: 'Visa',
+    createdAt: Date.now(),
+    lastUsedAt: Date.now(),
+    usageCount: 0
+  };
+}
+
+// Get or create a merchant card for a domain
+async function getOrCreateMerchantCard(domain) {
+  // Normalize domain (remove www. prefix)
+  const normalizedDomain = domain.replace(/^www\./, '').toLowerCase();
+
+  // Check if card already exists for this merchant
+  if (merchantCards[normalizedDomain]) {
+    console.log('[SubGuard] Returning existing card for', normalizedDomain);
+    // Update last used timestamp
+    merchantCards[normalizedDomain].lastUsedAt = Date.now();
+    await saveMerchantCards();
+    return { card: merchantCards[normalizedDomain] };
+  }
+
+  // Generate new card
+  console.log('[SubGuard] Generating new card for', normalizedDomain);
+  const newCard = generateMerchantCard(normalizedDomain);
+  merchantCards[normalizedDomain] = newCard;
+
+  // Save to storage
+  await saveMerchantCards();
+
+  // Sync with API
+  await syncMerchantCard(newCard);
+
+  return { card: newCard };
+}
+
+// Save merchant cards to storage
+async function saveMerchantCards() {
+  try {
+    await chrome.storage.local.set({ merchantCards });
+    console.log('[SubGuard] Saved', Object.keys(merchantCards).length, 'merchant cards');
+  } catch (error) {
+    console.error('[SubGuard] Error saving merchant cards:', error);
+  }
+}
+
+// Record an autofill event
+async function recordAutofillEvent(data) {
+  const { domain, fieldType, timestamp } = data;
+  const normalizedDomain = domain.replace(/^www\./, '').toLowerCase();
+
+  if (merchantCards[normalizedDomain]) {
+    merchantCards[normalizedDomain].usageCount++;
+    merchantCards[normalizedDomain].lastUsedAt = timestamp;
+    await saveMerchantCards();
+
+    // Sync event with API
+    await syncAutofillEvent(data);
+  }
+
+  return { success: true };
+}
+
+// Sync merchant card with API
+async function syncMerchantCard(card) {
+  try {
+    await fetch(`${SUBGUARD_API_URL}/cards/merchant`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ card })
+    });
+    console.log('[SubGuard] Synced merchant card to API');
+  } catch (error) {
+    // API might not be available
+    console.log('[SubGuard] Card sync skipped (API not available)');
+  }
+}
+
+// Sync autofill event with API
+async function syncAutofillEvent(data) {
+  try {
+    await fetch(`${SUBGUARD_API_URL}/cards/autofill`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+  } catch (error) {
+    // API might not be available
   }
 }
 
