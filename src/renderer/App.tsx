@@ -205,7 +205,13 @@ function Dashboard() {
   // Generate mood alerts when risk is high
   React.useEffect(() => {
     if (moodPrediction && (moodPrediction.riskLevel === 'high' || moodPrediction.riskLevel === 'critical')) {
-      generateMoodAlert(moodPrediction);
+      generateMoodAlert(moodPrediction, () => {
+        // Scroll to mood status card when "View Details" is clicked
+        const moodCard = document.querySelector('.mood-status-card');
+        if (moodCard) {
+          moodCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      });
     }
   }, [moodPrediction?.riskLevel]);
 

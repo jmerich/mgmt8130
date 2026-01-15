@@ -383,7 +383,12 @@
     modal.style.cssText = 'background:linear-gradient(145deg,#1a1a2e,#16213e);border-radius:24px;width:90%;max-width:520px;padding:0;box-shadow:0 30px 100px rgba(239,68,68,0.4);color:white;text-align:center;';
 
     const header = createElement('div', 'autonomy-header');
-    header.style.cssText = 'padding:30px 24px 20px;background:linear-gradient(135deg,rgba(239,68,68,0.2),rgba(185,28,28,0.2));border-bottom:1px solid rgba(255,255,255,0.1);';
+    header.style.cssText = 'padding:30px 24px 20px;background:linear-gradient(135deg,rgba(239,68,68,0.2),rgba(185,28,28,0.2));border-bottom:1px solid rgba(255,255,255,0.1);position:relative;';
+
+    // Close button
+    const closeBtn = createElement('button', 'close-btn', '\u00D7');
+    closeBtn.style.cssText = 'position:absolute;top:12px;right:12px;width:32px;height:32px;border:none;background:rgba(255,255,255,0.1);color:white;font-size:20px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;';
+    header.appendChild(closeBtn);
 
     const icon = createElement('div', 'autonomy-icon', '\uD83D\uDEAB');
     icon.style.cssText = 'font-size:48px;margin-bottom:10px;';
@@ -429,15 +434,42 @@
       console.log('[SubGuard] Block overlay shown!');
     }, 50);
 
-    backBtn.addEventListener('click', () => {
+    closeBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      overlay.remove();
+      overlayVisible = false;
+    });
+
+    // Stop clicks on modal from closing overlay
+    modal.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+
+    backBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       overlay.remove();
       overlayVisible = false;
       // Redirect to Google
       window.location.href = 'https://www.google.com';
     });
 
-    dashboardBtn.addEventListener('click', () => {
-      window.location.href = CONFIG.DASHBOARD_URL;
+    dashboardBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      overlay.remove();
+      overlayVisible = false;
+      // Open dashboard in new tab to avoid losing shopping context
+      window.open(CONFIG.DASHBOARD_URL, '_blank');
+    });
+
+    // Also allow clicking the overlay background to dismiss
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        overlay.remove();
+        overlayVisible = false;
+      }
     });
   }
 

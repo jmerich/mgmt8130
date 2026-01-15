@@ -148,7 +148,15 @@ export const NotificationToast: React.FC<ToastProps> = ({
   }, [notification.priority, onDismiss]);
 
   const handleDismiss = () => {
+    if (isExiting) return; // Prevent double-dismiss
     setIsExiting(true);
+    setTimeout(onDismiss, 300);
+  };
+
+  const handleAction = () => {
+    if (isExiting) return; // Prevent double-dismiss
+    setIsExiting(true);
+    if (onAction) onAction();
     setTimeout(onDismiss, 300);
   };
 
@@ -176,7 +184,7 @@ export const NotificationToast: React.FC<ToastProps> = ({
         <h4>{notification.title}</h4>
         <p>{notification.message}</p>
         {notification.actionLabel && (
-          <button className="toast-action" onClick={onAction}>
+          <button className="toast-action" onClick={handleAction}>
             {notification.actionLabel}
           </button>
         )}
@@ -217,10 +225,7 @@ export const ToastContainer: React.FC<ToastContainerProps> = ({ maxVisible = 3 }
           key={notification.id}
           notification={notification}
           onDismiss={() => handleDismiss(notification.id)}
-          onAction={() => {
-            notification.actionCallback?.();
-            handleDismiss(notification.id);
-          }}
+          onAction={() => notification.actionCallback?.()}
         />
       ))}
     </div>
@@ -373,7 +378,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({ onClick }) =
 export const useSmartNotificationGenerator = () => {
   const { addNotification } = useNotifications();
 
-  const generateMoodAlert = useCallback((prediction: MoodPrediction) => {
+  const generateMoodAlert = useCallback((prediction: MoodPrediction, onViewDetails?: () => void) => {
     if (prediction.riskLevel === 'high' || prediction.riskLevel === 'critical') {
       addNotification({
         type: 'mood-alert',
@@ -381,6 +386,7 @@ export const useSmartNotificationGenerator = () => {
         title: 'High Impulse Risk Detected',
         message: `Your current mood (${prediction.primaryMood}) suggests elevated spending risk. Consider waiting before making purchases.`,
         actionLabel: 'View Details',
+        actionCallback: onViewDetails,
         metadata: {
           mood: prediction.primaryMood,
           riskLevel: prediction.riskLevel,
