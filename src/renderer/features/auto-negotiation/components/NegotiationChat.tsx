@@ -6,6 +6,11 @@ interface NegotiationChatProps {
   onClose: () => void;
 }
 
+// Helper to clean message text - removes [STRATEGY:...] tags
+function cleanMessage(message: string): string {
+  return message.replace(/\[STRATEGY:[^\]]*\]\s*/g, '').trim();
+}
+
 export function NegotiationChat({ negotiation, onClose }: NegotiationChatProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -50,7 +55,7 @@ export function NegotiationChat({ negotiation, onClose }: NegotiationChatProps) 
                 <span className="message-sender">
                   {msg.role === 'ai' ? agent.name : `${negotiation.subscription.serviceName} Rep`}
                 </span>
-                <p>{msg.message}</p>
+                <p>{cleanMessage(msg.message)}</p>
               </div>
             </div>
           ))}
