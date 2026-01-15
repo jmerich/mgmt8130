@@ -6,26 +6,67 @@
 
   // ==================== EARLY EXIT FOR DASHBOARD ====================
   // Check IMMEDIATELY before any other code runs
+  const currentUrl = window.location.href;
   const hostname = window.location.hostname;
-  const port = window.location.port;
+
+  // Check if on localhost or 127.0.0.1 (any port)
   const isDashboard = (
-    (hostname === 'localhost' || hostname === '127.0.0.1')
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    currentUrl.includes('localhost') ||
+    currentUrl.includes('127.0.0.1')
   );
 
-  // ALWAYS remove any SubGuard overlays on localhost - even if they shouldn't exist
+  console.log('[SubGuard] URL check:', currentUrl, 'isDashboard:', isDashboard);
+
+  // ALWAYS remove any SubGuard overlays on localhost
   if (isDashboard) {
-    console.log('[SubGuard] Localhost detected - removing any overlays and exiting');
-    // Remove any existing overlays immediately
-    const overlays = document.querySelectorAll('#subguard-overlay, #subguard-autonomy-overlay, [class*="subguard"]');
-    overlays.forEach(el => el.remove());
-    // Also set up observer to remove any that get added
-    const observer = new MutationObserver((mutations) => {
-      const overlays = document.querySelectorAll('#subguard-overlay, #subguard-autonomy-overlay, [class*="subguard"]');
-      overlays.forEach(el => el.remove());
-    });
+    console.log('[SubGuard] LOCALHOST DETECTED - DISABLING EXTENSION');
+
+    // Function to remove all SubGuard elements
+    function removeAllSubGuard() {
+      const selectors = [
+        '#subguard-overlay',
+        '#subguard-autonomy-overlay',
+        '#subguard-block-notification',
+        '[class*="subguard"]',
+        '[id*="subguard"]'
+      ];
+      document.querySelectorAll(selectors.join(',')).forEach(el => {
+        console.log('[SubGuard] Removing element:', el.id || el.className);
+        el.remove();
+      });
+    }
+
+    // Remove immediately
+    removeAllSubGuard();
+
+    // Remove again after DOM ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', removeAllSubGuard);
+    }
+
+    // Remove again after full load
+    window.addEventListener('load', removeAllSubGuard);
+
+    // Keep removing every 500ms for 10 seconds
+    let count = 0;
+    const interval = setInterval(() => {
+      removeAllSubGuard();
+      count++;
+      if (count >= 20) clearInterval(interval);
+    }, 500);
+
+    // Also set up observer
+    const observer = new MutationObserver(removeAllSubGuard);
     if (document.body) {
       observer.observe(document.body, { childList: true, subtree: true });
+    } else {
+      document.addEventListener('DOMContentLoaded', () => {
+        observer.observe(document.body, { childList: true, subtree: true });
+      });
     }
+
     return; // Exit immediately, don't run any extension code
   }
 
