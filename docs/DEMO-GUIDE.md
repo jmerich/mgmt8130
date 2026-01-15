@@ -1,10 +1,11 @@
 # SubGuard Demo Guide
 
-A structured 4-minute live demo showcasing SubGuard's key features.
+A structured 5-minute live demo showcasing SubGuard's key features, including the new AI-powered mood prediction system.
 
 **Related Documentation:**
 - [Main README](../README.md) - Overview and quick start
 - [Architecture](ARCHITECTURE.md) - System architecture and diagrams
+- [Mood Intelligence](MOOD-INTELLIGENCE.md) - Predictive AI system deep dive
 
 ---
 
@@ -40,36 +41,72 @@ Open these tabs in order:
 In the dashboard:
 - Set autonomy level to **Moderate** (starting point)
 - Ensure extension shows "Connected"
+- Verify the **Mood Status Card** is displaying (below Spending Forecast)
 
 ---
 
-## Demo Script (4 Minutes)
+## Demo Script (5 Minutes)
 
-### Minute 1: Introduction & Dashboard Overview (0:00 - 1:00)
+### Minute 1: Introduction & Predictive AI Dashboard (0:00 - 1:00)
 
 **Start on Tab 1 (Dashboard)**
 
-> "SubGuard is an AI-powered financial protection platform that helps users manage subscriptions and control impulse spending."
+> "SubGuard is an AI-powered financial protection platform that helps users manage subscriptions and control impulse spending. What makes us unique is our **predictive mood intelligence system** that detects when you're at risk for impulse purchases before they happen."
 
-**Point out key dashboard elements:**
+**Point out the new AI features:**
 
-1. **Savings Overview** (top)
-   - "Here we see total savings from blocked purchases, cancelled trials, and negotiated subscriptions."
+1. **Spending Forecast Widget** (prominent on dashboard)
+   - "This AI-powered forecast predicts your spending for the next 7 or 30 days."
+   - Point out the **color-coded bars** (green = low risk, orange = moderate, red = high risk)
+   - "Notice Friday and Sunday are flagged as high-risk days based on behavioral patterns."
+   - Click on a bar to show the **day detail panel**
+   - "Each day shows the dominant predicted mood, triggers, and confidence level."
 
-2. **Browser Activity Monitor**
-   - "This shows real-time shopping activity detected by our Chrome extension."
-   - "The extension is currently connected and tracking."
+2. **Summary Cards**
+   - Point to "Projected Month-End: $X,XXX"
+   - "The AI predicts whether you'll be under or over budget."
+   - Show "High-Risk Days: X" - "We've identified X days where you're likely to overspend."
+   - Show "AI Confidence: XX%" - "This is our prediction accuracy based on your patterns."
 
-3. **AI Autonomy Levels** (scroll to section)
-   - "Users can choose how much control to give the AI - from observe-only to full autonomy."
-   - **Click through each level briefly**: Minimal → Moderate → High → Full
-   - "For this demo, I'll set it to **Full** so we can see the AI actively intervene."
-
-**Action:** Set autonomy to **Full** and set "Block Checkout Above" to **$1**.
+**Action:** Click "30 Days" toggle to show longer forecast, then back to "7 Days".
 
 ---
 
-### Minute 2: Card Masking Demo (1:00 - 2:00)
+### Minute 2: Real-Time Mood Detection (1:00 - 2:00)
+
+**Stay on Dashboard, scroll to Mood Status Card**
+
+> "Now here's where it gets really interesting. SubGuard analyzes your behavior in real-time to predict your emotional state and impulse risk."
+
+**Walk through the Mood Status Card:**
+
+1. **Current Mood Indicator**
+   - "Right now, the AI detects my mood as [stressed/bored/anxious/etc.]"
+   - Point to the emoji and mood label
+   - "This is based on signals like tab switching frequency, scroll speed, and time of day."
+
+2. **Risk Score (0-100)**
+   - "My impulse risk score is currently [XX]."
+   - "Above 75 is critical, 50-74 is high, 30-49 moderate."
+   - Explain: "The higher the score, the more likely I am to make a purchase I'll regret."
+
+3. **Active Triggers**
+   - "The AI identified these specific triggers elevating my risk:"
+   - Read the triggers: "Late night browsing", "High phone checking frequency", etc.
+   - "These are behavioral signals correlated with impulsive decisions."
+
+4. **AI Recommendation**
+   - Point to the lightbulb recommendation
+   - "Based on my current state, the AI recommends: '[recommendation text]'"
+
+**Interaction Demo:**
+- "Watch what happens if I rapidly switch tabs and scroll quickly..."
+- (Demonstrate frantic browsing behavior for 10 seconds)
+- "The risk score adjusts in real-time. This is live behavioral analysis."
+
+---
+
+### Minute 3: Card Masking Demo (2:00 - 3:00)
 
 **Switch to Tab 2 (Netflix Mock Page)**
 
@@ -96,56 +133,62 @@ In the dashboard:
 
 ---
 
-### Minute 3: AI Autonomy & Checkout Blocking (2:00 - 3:00)
+### Minute 4: AI Autonomy & Checkout Blocking (3:00 - 4:00)
 
 **Switch to Tab 3 (Target.com)**
 
-> "Now let's see how AI autonomy protects against impulse purchases."
+> "Now let's see how AI autonomy protects against impulse purchases. Remember, the AI detected I'm in a high-risk emotional state."
 
 **Live checkout blocking demo:**
 
 1. "I'm on Target.com. Let me add something to cart."
    - Add any item to cart
 
-2. "Now watch what happens when I try to checkout."
+2. "Now watch what happens when I try to checkout with an elevated risk score."
    - Click **"Sign in to check out"** or **"Check out"** button
 
 3. **Show the blocking overlay:**
    - "SubGuard immediately blocked this checkout!"
    - Point out the red overlay with explanation
-   - "It detected that this purchase exceeds our $1 limit and is protecting my financial goals."
+   - "It detected that this purchase exceeds our limit AND my impulse risk is elevated."
 
-4. **Explain the intervention options:**
-   - "Users can go back to shopping or view the dashboard to adjust settings."
-   - "This is the 'Full Autonomy' level - the AI actively prevents checkouts that don't align with your budget."
+4. **Explain the mood-aware intervention:**
+   - "Notice it says my current mood is [X] with a [Y]% impulse risk."
+   - "This isn't just a spending limit - it's contextual protection based on my emotional state."
+   - "If I were in a calm, deliberate state, the threshold would be different."
 
 **Action:** Click "Go Back to Shopping" to dismiss.
 
 ---
 
-### Minute 4: Feature Overview & Wrap-up (3:00 - 4:00)
+### Minute 5: Purchase Intercept & Wrap-up (4:00 - 5:00)
 
 **Return to Tab 1 (Dashboard)**
 
-> "Let me quickly show you the other features."
+> "Let me show you the full intervention experience and wrap up the features."
 
-**Navigate to Purchase Blocking page:**
-- "Users can set custom rules - block specific merchants, categories, or set spending limits."
-- Show the rules interface briefly
+**Demonstrate Purchase Intercept (if time permits):**
+- Navigate to Google Pay Demo (http://localhost:5173/demo/google-pay)
+- "This shows our full-screen intervention UI for mobile payments."
+- Point out the **Risk Gauge** visualization
+- "Users can swipe left to block, right to approve."
+- Mention the **Breathing Exercise** feature: "We even built in a 4-4-4 breathing technique to help users pause and reflect."
 
-**Navigate to Auto-Negotiation page:**
-- "SubGuard can automatically negotiate better prices on your subscriptions."
-- "It shows all your subscriptions and potential savings."
+**Smart Notifications:**
+- Click the notification bell in the header
+- "The notification system sends proactive alerts: mood warnings, pattern alerts, and positive reinforcement."
+- Show any notifications in the center
 
-**Return to Dashboard for closing:**
+**Feature Summary:**
 
 > "In summary, SubGuard provides:
-> - Real-time shopping behavior monitoring
-> - AI-powered interventions at 4 autonomy levels
+> - **Predictive AI**: Forecasts spending risk days/weeks in advance
+> - **Real-time mood detection**: Analyzes 30+ behavioral signals to predict impulse risk
+> - **Contextual interventions**: Blocks adapt based on your emotional state, not just dollar amounts
 > - Virtual card protection for subscriptions
 > - Automated price negotiation
 >
-> All designed to help users take back control of their spending."
+> The key differentiator is that we predict problems before they happen, rather than just reacting to overspending."
 
 **End with the savings display:**
 - "And as you can see, these features have already saved over $1,500 this year."
@@ -155,27 +198,65 @@ In the dashboard:
 ## Demo Flow Diagram
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        4-MINUTE DEMO FLOW                        │
-└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         5-MINUTE DEMO FLOW                                  │
+└─────────────────────────────────────────────────────────────────────────────┘
 
- MINUTE 1                MINUTE 2               MINUTE 3              MINUTE 4
- ─────────              ─────────              ─────────             ─────────
-    │                      │                      │                     │
-    ▼                      ▼                      ▼                     ▼
-┌─────────┐          ┌──────────┐          ┌──────────┐          ┌─────────┐
-│Dashboard│──────────│ Netflix  │──────────│ Target   │──────────│Features │
-│Overview │          │Mock Page │          │Checkout  │          │Overview │
-└─────────┘          └──────────┘          └──────────┘          └─────────┘
-    │                      │                      │                     │
-    ▼                      ▼                      ▼                     ▼
-• Savings stats      • Virtual card        • Add item to        • Purchase
-• Browser activity     autofill              cart                 Blocking
-• AI autonomy        • Click SubGuard      • Click checkout     • Auto-Negotiation
-  levels               prompt              • Show blocking      • Savings recap
-• Set to "Full"      • Show protected        overlay
-                       subscription
+ MINUTE 1              MINUTE 2             MINUTE 3            MINUTE 4            MINUTE 5
+ ─────────            ─────────            ─────────           ─────────           ─────────
+    │                    │                    │                    │                   │
+    ▼                    ▼                    ▼                    ▼                   ▼
+┌─────────┐        ┌──────────┐        ┌──────────┐        ┌──────────┐        ┌─────────┐
+│Spending │        │  Mood    │        │ Netflix  │        │ Target   │        │ Wrap-up │
+│Forecast │        │ Status   │        │Mock Page │        │Checkout  │        │& Notifs │
+└─────────┘        └──────────┘        └──────────┘        └──────────┘        └─────────┘
+    │                    │                    │                    │                   │
+    ▼                    ▼                    ▼                    ▼                   ▼
+• 7/30 day          • Current mood      • Virtual card      • Add item to       • Notification
+  predictions         detection           autofill            cart                center
+• Risk-colored      • Risk score        • Click SubGuard    • Click checkout    • Feature
+  bars                (0-100)             prompt            • Show blocking       recap
+• Click day         • Active triggers   • Show protected      overlay           • Savings
+  details           • AI recommendation   subscription      • Mood-aware          highlight
+• Summary cards     • Live demo:                              intervention
+                      behavior →
+                      score change
 ```
+
+---
+
+## Key Talking Points for Mood Intelligence
+
+### "How does the mood detection actually work?"
+
+> "We analyze over 30 behavioral signals across four categories:
+> - **Browser signals**: Tab switching frequency, scroll speed, time on page
+> - **Device signals**: Screen unlocks, typing errors, motion intensity
+> - **Temporal signals**: Time of day, day of week, proximity to payday
+> - **Purchase patterns**: How fast you add to cart, price checking behavior
+>
+> These feed into a weighted scoring algorithm that classifies your mood into one of seven states, each with a different impulse risk multiplier."
+
+### "What's the science behind this?"
+
+> "This is based on behavioral economics research. Studies show:
+> - Late-night purchases have 2x higher regret rates
+> - The first 2 days after payday see 60% more impulse purchases
+> - Emotional states like boredom and stress drive 'retail therapy' patterns
+>
+> We've codified this research into algorithmic protections. The full methodology is documented in our Mood Intelligence technical spec."
+
+### "Isn't this creepy? You're tracking my emotions."
+
+> "Great question. All processing happens locally on your device - we never transmit your behavioral data to any server. You're in complete control: you can see every signal we track, adjust thresholds, or disable tracking entirely. Think of it like a fitness tracker for your spending habits."
+
+### "What about false positives?"
+
+> "The system has four autonomy levels. At 'Moderate', you just get gentle reminders - nothing is blocked. At 'Full', the AI actively intervenes. Users choose their comfort level. The confidence score also shows how certain the prediction is."
+
+### "How is this different from just setting a spending limit?"
+
+> "Traditional spending limits are static - $100/day regardless of context. Our system is dynamic. If you're browsing calmly at 2PM on a Tuesday after researching for a week, that $100 purchase gets different treatment than the same purchase at 11PM on payday when you've been doom-scrolling for an hour. Context matters."
 
 ---
 
@@ -200,6 +281,19 @@ In the dashboard:
 ---
 
 ## Backup Plans
+
+### If the mood detection shows "neutral" with low risk:
+
+This can happen if the demo environment is calm. Options:
+1. Explain: "Right now my browsing is calm, so risk is low. In a real scenario with more activity, scores would be higher."
+2. Demonstrate rapid tab switching and erratic scrolling to elevate the score
+3. Mention: "In testing, late-night demos tend to show higher stress scores naturally."
+
+### If the Spending Forecast is still loading:
+
+Wait 2-3 seconds - the widget has an 800ms simulated AI delay.
+- If it's stuck, refresh the page
+- Alternatively, explain what it would show while it loads
 
 ### If the extension isn't connecting:
 
@@ -226,15 +320,26 @@ Alternatively, demonstrate card masking from the Card Masking page in the dashbo
 
 1. **Technical**: "What frameworks are you using?"
    - React 18, TypeScript, Express.js API, Chrome Manifest V3
+   - Mood detection uses weighted additive scoring model (not ML - deterministic)
 
-2. **Business**: "How would this make money?"
+2. **Technical**: "Why not use machine learning for mood detection?"
+   - Explainability: Users can see exactly why they're flagged
+   - Privacy: No model training data leaves the device
+   - Latency: Real-time scoring without inference delay
+   - Future: ML layer planned for personalized calibration
+
+3. **Business**: "How would this make money?"
    - Subscription management fees, premium features, affiliate partnerships with financial services
 
-3. **Privacy**: "What data do you collect?"
+4. **Privacy**: "What data do you collect?"
    - Local-only by default; optional sync for cross-device features
+   - Behavioral signals are processed in-memory and not persisted
 
-4. **Competition**: "How is this different from browser extensions like Honey?"
-   - Proactive protection vs. reactive coupons; AI autonomy levels; subscription lifecycle management
+5. **Competition**: "How is this different from browser extensions like Honey?"
+   - Proactive prediction vs. reactive coupons
+   - Emotional state awareness
+   - AI autonomy levels
+   - Subscription lifecycle management
 
 ---
 
@@ -299,6 +404,14 @@ SubGuard includes a Progressive Web App (PWA) that can be installed on mobile de
    http://localhost:5173
    ```
 
+#### Option 3: Public URL with Tunnel (For Remote Demos)
+
+```bash
+npm run demo:mobile
+```
+
+This creates a public URL via Cloudflare tunnel and generates a QR code for easy mobile access.
+
 ### Installing the PWA
 
 1. Open SubGuard in Chrome on your phone
@@ -307,9 +420,9 @@ SubGuard includes a Progressive Web App (PWA) that can be installed on mobile de
 4. The SubGuard icon will appear on your home screen
 5. Open from home screen - it runs in standalone mode (no browser UI)
 
-### Mobile Demo Script (2 Minutes)
+### Mobile Demo Script (3 Minutes)
 
-#### Part 1: PWA Installation & Dashboard (0:00 - 0:45)
+#### Part 1: PWA Installation & Mood Dashboard (0:00 - 1:00)
 
 1. **Show the PWA installation:**
    - "SubGuard is a Progressive Web App - it can be installed like a native app."
@@ -317,15 +430,26 @@ SubGuard includes a Progressive Web App (PWA) that can be installed on mobile de
    - "Notice it runs full-screen without browser chrome."
 
 2. **Dashboard walkthrough:**
-   - Show savings overview (scrolls naturally on mobile)
-   - Demonstrate the mobile navigation (hamburger menu)
-   - "The interface is fully responsive and touch-optimized."
+   - Show the **Spending Forecast** widget (scrolls naturally on mobile)
+   - Tap on a day bar to show the detail panel
+   - "The AI predicts Thursday is a high-risk day based on your patterns."
 
-3. **Enable notifications:**
-   - Tap the notification bell (🔕 → 🔔)
-   - "Users can receive push notifications for blocked purchases."
+3. **Mood Status Card:**
+   - Scroll to the mood card
+   - "Real-time mood detection works on mobile too."
+   - "My current state is [X] with [Y] risk score."
 
-#### Part 2: Google Pay Integration Demo (0:45 - 2:00)
+#### Part 2: Smart Notifications (1:00 - 1:30)
+
+1. **Notification Bell:**
+   - Tap the notification bell in the header
+   - Show the notification center panel
+   - "Proactive alerts: mood warnings, pattern predictions, positive reinforcement."
+
+2. **Enable push notifications:**
+   - "Users can opt into push notifications for real-time alerts."
+
+#### Part 3: Google Pay Integration Demo (1:30 - 3:00)
 
 1. **Navigate to Google Pay Demo:**
    - Use hamburger menu → "Google Pay Demo"
@@ -336,49 +460,55 @@ SubGuard includes a Progressive Web App (PWA) that can be installed on mobile de
    - Point out the **SubGuard Protected** card is pre-selected
    - "The virtual card masks their real payment details."
 
-3. **Complete the payment:**
+3. **Purchase Intercept (if triggered):**
+   - If risk is elevated, the **Purchase Intercept screen** may appear
+   - "The full-screen intervention shows my risk gauge and triggers."
+   - "I can swipe to decide, or use the breathing exercise to pause."
+
+4. **Complete the payment:**
    - Tap **"Pay with Google Pay"**
    - Confirm payment
    - Show processing animation
    - **Success screen** with "Protected by SubGuard" badge
 
-4. **Demonstrate blocking (optional):**
+5. **Demonstrate blocking (optional):**
    - Go back and select "Personal Card" instead
    - Attempt payment
    - Show the **blocked** screen
    - "SubGuard detected an unprotected card and blocked the payment."
    - Tap "Use Protected Card" to switch back
 
-5. **Show notification:**
-   - If notifications enabled, a push notification appears
-   - "Users get instant feedback on their mobile device."
-
 ### Mobile Demo Flow
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                     MOBILE DEMO FLOW (2 MIN)                     │
-└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                      MOBILE DEMO FLOW (3 MIN)                               │
+└─────────────────────────────────────────────────────────────────────────────┘
 
-    SETUP                PART 1                    PART 2
-   ────────             ────────                  ────────
-      │                    │                         │
-      ▼                    ▼                         ▼
-┌───────────┐       ┌───────────┐            ┌───────────────┐
-│ Install   │──────▶│ Dashboard │───────────▶│  Google Pay   │
-│ PWA       │       │ Mobile UI │            │  Mock Payment │
-└───────────┘       └───────────┘            └───────────────┘
-      │                    │                         │
-      ▼                    ▼                         ▼
-• Add to home        • Hamburger nav          • Protected card
-  screen             • Savings view           • Payment flow
-• Open standalone    • Enable notifs          • Success/Block
+    SETUP              PART 1                PART 2              PART 3
+   ────────           ────────              ────────            ────────
+      │                  │                     │                   │
+      ▼                  ▼                     ▼                   ▼
+┌───────────┐     ┌───────────┐         ┌───────────┐      ┌───────────────┐
+│ Install   │────▶│ Dashboard │────────▶│  Smart    │─────▶│  Google Pay   │
+│ PWA       │     │ + Mood AI │         │  Notifs   │      │  + Intercept  │
+└───────────┘     └───────────┘         └───────────┘      └───────────────┘
+      │                  │                     │                   │
+      ▼                  ▼                     ▼                   ▼
+• Add to home       • Spending           • Bell icon          • Protected card
+  screen              Forecast           • Notification        • Payment flow
+• Open standalone   • Tap day detail       center             • Risk gauge
+                    • Mood status        • Push opt-in        • Swipe to decide
+                      card
 ```
 
 ### Mobile Talking Points
 
 **"Why a PWA instead of a native app?"**
 > "PWAs offer the best of both worlds - native app feel with web development speed. Users can install instantly without app store approval, and we can push updates immediately."
+
+**"Does the mood detection work on mobile?"**
+> "Yes - the same behavioral analysis runs on mobile. We track scroll patterns, app switching, time of day, and more. The Spending Forecast and mood status update in real-time."
 
 **"Does it work offline?"**
 > "Yes, the service worker caches the app shell. Users can view their dashboard and settings offline. Real-time features require connectivity."
@@ -403,6 +533,11 @@ SubGuard includes a Progressive Web App (PWA) that can be installed on mobile de
 2. Ensure "Do Not Disturb" is off
 3. Some notification features require HTTPS in production
 
+**Mood status not updating:**
+- The service collects signals every 30 seconds
+- For faster updates, interact with the page (scroll, tap) to generate signals
+
 ---
 
 *For technical architecture details, see [ARCHITECTURE.md](ARCHITECTURE.md)*
+*For mood intelligence algorithm details, see [MOOD-INTELLIGENCE.md](MOOD-INTELLIGENCE.md)*
