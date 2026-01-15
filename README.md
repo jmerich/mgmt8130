@@ -32,22 +32,116 @@ SubGuard addresses the challenge of subscription fatigue and impulse spending by
 4. **Automated price negotiation** for existing subscriptions
 5. **Purchase blocking rules** based on merchant, category, or amount
 
-### How It Works
+### System Architecture
 
+```mermaid
+graph TB
+    subgraph "👤 User's Browser"
+        EXT["🧩 Chrome Extension<br/><i>content.js + background.js</i>"]
+        DASH["📊 React Dashboard<br/><i>localhost:5173</i>"]
+    end
+
+    subgraph "🖥️ Local Server"
+        API["⚡ Express API<br/><i>localhost:3001</i>"]
+        STORE[("💾 In-Memory Store<br/><i>Settings, Cards, Analytics</i>")]
+    end
+
+    subgraph "🌐 External Sites"
+        SHOP["🛒 Shopping Sites<br/><i>Amazon, Target, etc.</i>"]
+    end
+
+    EXT -->|"Monitor & Analyze"| SHOP
+    EXT <-->|"Sync Data & Check Rules"| API
+    DASH <-->|"Display & Configure"| API
+    API <--> STORE
+
+    style EXT fill:#4285f4,color:#fff
+    style DASH fill:#34a853,color:#fff
+    style API fill:#fbbc04,color:#000
+    style SHOP fill:#ea4335,color:#fff
 ```
-User browses shopping sites
-        |
-        v
-Chrome Extension analyzes page
-        |
-        v
-Sends data to API Server <---> Dashboard displays activity
-        |
-        v
-AI checks autonomy rules
-        |
-        v
-Intervention (block/warn/redirect) or Allow
+
+### Data Flow: How It Works
+
+```mermaid
+sequenceDiagram
+    participant U as 👤 User
+    participant S as 🛒 Shopping Site
+    participant E as 🧩 Extension
+    participant A as ⚡ API Server
+    participant D as 📊 Dashboard
+
+    Note over U,D: 1️⃣ BROWSING & MONITORING
+    U->>S: Visit shopping site
+    S->>E: Page loads
+    E->>E: Analyze page content
+    E->>A: POST /extension/page-analysis
+    A->>A: Store & evaluate risk
+    D->>A: GET /extension/data (polling)
+    A-->>D: Activity updates
+
+    Note over U,D: 2️⃣ CHECKOUT INTERCEPTION
+    U->>S: Click "Checkout"
+    E->>E: Intercept click ⛔
+    E->>A: POST /autonomy/check
+    A->>A: Evaluate rules
+
+    alt 🚫 Block (High Autonomy + Over Limit)
+        A-->>E: {allow: false, action: "block_checkout"}
+        E->>S: Show blocking overlay
+    else ✅ Allow
+        A-->>E: {allow: true}
+        E->>S: Proceed with checkout
+    end
+```
+
+### Card Masking Flow
+
+```mermaid
+sequenceDiagram
+    participant U as 👤 User
+    participant P as 💳 Payment Form
+    participant E as 🧩 Extension
+    participant A as ⚡ API Server
+
+    U->>P: Navigate to payment page
+    E->>E: Detect card input fields
+    E->>P: Show "Use SubGuard" prompt
+
+    U->>E: Click prompt
+    E->>E: Generate virtual card<br/>(Luhn-valid, merchant-locked)
+    E->>P: Autofill card fields
+    E->>A: POST /cards/merchant (sync)
+
+    Note over U,A: 🛡️ Real card never exposed to merchant
+```
+
+### Autonomy Decision Engine
+
+```mermaid
+flowchart LR
+    subgraph "📥 Input"
+        REQ["Checkout Request<br/>• Price: $X<br/>• Time on site<br/>• Risk level"]
+    end
+
+    subgraph "🧠 AI Decision Engine"
+        CHK{Autonomy<br/>Level?}
+        CHK -->|Minimal/Moderate| ALLOW["✅ Allow"]
+        CHK -->|High/Full| RULES
+
+        RULES{Check Rules}
+        RULES -->|"Price > Limit"| BLOCK["🚫 Block"]
+        RULES -->|"Time > Max"| REDIRECT["↩️ Redirect"]
+        RULES -->|"All OK"| ALLOW
+    end
+
+    subgraph "📤 Output"
+        BLOCK --> OVR["Show Overlay"]
+        REDIRECT --> NAV["Navigate Away"]
+        ALLOW --> PROC["Proceed"]
+    end
+
+    REQ --> CHK
 ```
 
 ---
