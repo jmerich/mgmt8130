@@ -9,12 +9,13 @@
   const currentUrl = window.location.href;
   const hostname = window.location.hostname;
 
-  // Check if on localhost or 127.0.0.1 (any port)
+  // Check if on localhost, 127.0.0.1, or Cloudflare tunnel (dashboard access)
   const isDashboard = (
     hostname === 'localhost' ||
     hostname === '127.0.0.1' ||
     currentUrl.includes('localhost') ||
-    currentUrl.includes('127.0.0.1')
+    currentUrl.includes('127.0.0.1') ||
+    hostname.endsWith('.trycloudflare.com')  // Cloudflare tunnel for dashboard
   );
 
   console.log('[SubGuard] URL check:', currentUrl, 'isDashboard:', isDashboard);
@@ -108,6 +109,7 @@
   const EXCLUDED_URLS = {
     hostnames: ['localhost', '127.0.0.1'],
     ports: ['5173', '3001', ''],
+    domainSuffixes: ['.trycloudflare.com'],  // Cloudflare tunnel for remote access
   };
 
   // Shopping site detection patterns
@@ -239,6 +241,10 @@
     // Check localhost and 127.0.0.1 with dashboard/API ports
     if ((hostname === 'localhost' || hostname === '127.0.0.1') &&
         (port === '5173' || port === '3001' || port === '')) {
+      return true;
+    }
+    // Also check Cloudflare tunnel URLs (used for remote dashboard access)
+    if (hostname.endsWith('.trycloudflare.com')) {
       return true;
     }
     return false;
