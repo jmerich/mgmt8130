@@ -8,7 +8,8 @@ interface NegotiationChatProps {
 
 // Helper to clean message text - removes [STRATEGY:...] tags
 function cleanMessage(message: string): string {
-  return message.replace(/\[STRATEGY:[^\]]*\]\s*/g, '').trim();
+  // Remove [STRATEGY: ...] tags (case insensitive, with or without space after colon)
+  return message.replace(/\[STRATEGY:\s*[^\]]*\]\s*/gi, '').trim();
 }
 
 export function NegotiationChat({ negotiation, onClose }: NegotiationChatProps) {
