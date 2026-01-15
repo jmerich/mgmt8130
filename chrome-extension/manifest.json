@@ -1,15 +1,16 @@
 {
   "manifest_version": 3,
   "name": "SubGuard AI Shopping Assistant",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "AI-powered financial protection that monitors your browsing and helps prevent impulse purchases",
   "permissions": [
     "activeTab",
     "storage",
-    "alarms",
-    "tabs"
+    "alarms"
   ],
   "host_permissions": [
+    "http://localhost:3001/*",
+    "http://127.0.0.1:3001/*",
     "<all_urls>"
   ],
   "background": {
@@ -19,6 +20,14 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
+      "exclude_matches": [
+        "*://localhost/*",
+        "*://127.0.0.1/*",
+        "*://*.google.com/*",
+        "*://*.gmail.com/*",
+        "*://*.github.com/*",
+        "*://*.stackoverflow.com/*"
+      ],
       "js": ["content.js"],
       "css": ["styles/overlay.css"],
       "run_at": "document_idle"
@@ -39,8 +48,11 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["styles/*", "icons/*"],
+      "resources": ["styles/overlay.css", "icons/icon48.png"],
       "matches": ["<all_urls>"]
     }
-  ]
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
 }

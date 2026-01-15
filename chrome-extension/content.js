@@ -8,9 +8,11 @@
   // Note: Content scripts can't use ES module imports, so config is defined inline
   // Keep in sync with chrome-extension/config.js
 
-  const CONFIG = {
+  // Default config - can be overridden via chrome.storage
+  let CONFIG = {
     API_URL: 'http://localhost:3001/api',
     DASHBOARD_URL: 'http://localhost:5173',
+    API_KEY: '', // Set via extension options/storage
     POLLING: {
       SESSION_UPDATE: 5000,
     },
@@ -22,6 +24,18 @@
     Z_INDEX: {
       OVERLAY: 2147483647,
     },
+  };
+
+  // Load config from storage on init
+  const loadConfig = async () => {
+    try {
+      const stored = await chrome.storage.local.get(['apiUrl', 'dashboardUrl', 'apiKey']);
+      if (stored.apiUrl) CONFIG.API_URL = stored.apiUrl;
+      if (stored.dashboardUrl) CONFIG.DASHBOARD_URL = stored.dashboardUrl;
+      if (stored.apiKey) CONFIG.API_KEY = stored.apiKey;
+    } catch (e) {
+      // Use defaults if storage access fails
+    }
   };
 
   // SubGuard dashboard URLs to exclude from monitoring
@@ -184,10 +198,21 @@
     }
   }
 
+  // Helper to create headers with API key
+  function getApiHeaders(additionalHeaders = {}) {
+    const headers = { ...additionalHeaders };
+    if (CONFIG.API_KEY) {
+      headers['X-API-Key'] = CONFIG.API_KEY;
+    }
+    return headers;
+  }
+
   // Fetch autonomy settings from API
   async function fetchAutonomySettings() {
     try {
-      const response = await fetch(`${CONFIG.API_URL}/autonomy/settings`);
+      const response = await fetch(`${CONFIG.API_URL}/autonomy/settings`, {
+        headers: getApiHeaders()
+      });
       if (response.ok) {
         const data = await response.json();
         autonomySettings = data.settings;
@@ -205,7 +230,7 @@
     try {
       const response = await fetch(`${CONFIG.API_URL}/autonomy/check`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getApiHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           action: pageAnalysis.isCheckoutPage ? 'checkout' : 'browse',
           context: {
@@ -1010,7 +1035,7 @@
 
           const response = await fetch(`${CONFIG.API_URL}/autonomy/check`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: getApiHeaders({ 'Content-Type': 'application/json' }),
             body: JSON.stringify({
               action: 'checkout',
               context: {

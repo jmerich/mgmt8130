@@ -4,6 +4,21 @@
 import { CONFIG } from './config.js';
 
 const SUBGUARD_API_URL = CONFIG.API_URL;
+let API_KEY = CONFIG.API_KEY || '';
+
+// Load API key from storage
+chrome.storage.local.get(['apiKey'], (result) => {
+  if (result.apiKey) API_KEY = result.apiKey;
+});
+
+// Helper to create headers with API key
+function getApiHeaders(additionalHeaders = {}) {
+  const headers = { ...additionalHeaders };
+  if (API_KEY) {
+    headers['X-API-Key'] = API_KEY;
+  }
+  return headers;
+}
 
 // Merchant card storage for card masking autofill
 let merchantCards = {}; // domain -> card mapping
@@ -192,7 +207,7 @@ async function proxyAutonomyCheck(data) {
   try {
     const response = await fetch(`${SUBGUARD_API_URL}/autonomy/check`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getApiHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(data)
     });
 
@@ -342,7 +357,7 @@ async function syncMerchantCard(card) {
   try {
     await fetch(`${SUBGUARD_API_URL}/cards/merchant`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getApiHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ card })
     });
     console.log('[SubGuard] Synced merchant card to API');
@@ -357,7 +372,7 @@ async function syncAutofillEvent(data) {
   try {
     await fetch(`${SUBGUARD_API_URL}/cards/autofill`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getApiHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(data)
     });
   } catch (error) {
@@ -508,7 +523,7 @@ async function syncWithApp() {
   try {
     const response = await fetch(`${SUBGUARD_API_URL}/extension/sync`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getApiHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({
         sessionId: aggregatedData.currentSession?.id,
         dailyStats: aggregatedData.dailyStats,
@@ -531,7 +546,7 @@ async function syncPageAnalysis(analysis) {
   try {
     await fetch(`${SUBGUARD_API_URL}/extension/page-analysis`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getApiHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({
         ...analysis,
         sessionId: aggregatedData.currentSession?.id

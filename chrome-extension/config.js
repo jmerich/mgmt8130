@@ -5,6 +5,10 @@ export const CONFIG = {
   // API Configuration
   API_URL: 'http://localhost:3001/api',
 
+  // API Key for authentication (in production, get from secure storage)
+  // In dev mode, the API allows unauthenticated requests
+  API_KEY: '',
+
   // Endpoints
   ENDPOINTS: {
     HEALTH: '/health',
