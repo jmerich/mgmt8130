@@ -8,6 +8,7 @@ import { NetflixMockPage } from './features/demo/NetflixMockPage';
 import { GooglePayMockPage } from './features/demo/GooglePayMockPage';
 import { CONFIG, type AutonomyLevel } from '../config';
 import { requestNotificationPermission, sendNotification } from './main';
+import './styles/theme.css';
 import './App.css';
 
 function App() {

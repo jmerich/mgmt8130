@@ -1,53 +1,60 @@
-/* The Sentience Layer */
+/* The Sentience Layer - Light Theme */
+/* Theme variables available from theme.css (imported in App.tsx) */
 .sentience-layer {
-    margin-top: 3rem;
-    padding-top: 2rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    margin: 0 var(--space-xl, 2rem) var(--space-xl, 2rem);
+    padding: var(--space-lg, 1.5rem);
+    background: var(--bg-card, white);
+    border: 1px solid var(--border-color, #e0e0e0);
+    border-radius: var(--border-radius-lg, 12px);
+}
+
+.sentience-layer h3 {
+    margin: 0 0 var(--space-lg, 1.5rem) 0;
+    font-size: var(--font-size-base, 1rem);
+    color: var(--text-primary, #1a1a2e);
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .sentience-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1.5rem;
-    margin-top: 1.5rem;
+    gap: 1rem;
 }
 
 /* AI Smart Node Card */
 .smart-node {
-    background: rgba(22, 22, 30, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 16px;
-    padding: 1.5rem;
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 1.25rem;
     position: relative;
-    overflow: hidden;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
+    transition: all 0.2s ease;
 }
 
 .smart-node:hover {
-    transform: translateY(-5px);
-    border-color: rgba(0, 243, 255, 0.3);
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+    border-color: #1976d2;
+    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.1);
 }
 
 /* The Entropy Orb */
 .entropy-orb {
     position: absolute;
-    top: 1.5rem;
-    right: 1.5rem;
+    top: 1.25rem;
+    right: 1.25rem;
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    box-shadow: 0 0 20px currentColor;
 }
 
 .entropy-orb::after {
     content: '';
     position: absolute;
-    top: -4px;
-    left: -4px;
-    right: -4px;
-    bottom: -4px;
+    top: -3px;
+    left: -3px;
+    right: -3px;
+    bottom: -3px;
     border-radius: 50%;
     border: 1px solid currentColor;
     opacity: 0.5;
@@ -56,76 +63,48 @@
 
 /* Pulse Speeds based on Usage */
 .pulse-high {
-    color: #00f3ff;
+    background: #1976d2;
+    color: #1976d2;
     animation: beat 0.8s infinite;
 }
 
-/* Vibrant, fast */
 .pulse-stable {
-    color: #34c759;
+    background: #4caf50;
+    color: #4caf50;
     animation: beat 1.5s infinite;
 }
 
-/* Steady, healthy */
 .pulse-decay {
-    color: #ffcc00;
+    background: #ff9800;
+    color: #ff9800;
     animation: beat 3s infinite;
 }
 
-/* Slowing down */
 .pulse-zombie {
-    color: #ff3b30;
+    background: #f44336;
+    color: #f44336;
     animation: flicker 4s infinite;
 }
 
-/* Dying light */
+.pulse-dead {
+    background: #9e9e9e;
+    color: #9e9e9e;
+}
 
 @keyframes beat {
-    0% {
-        transform: scale(1);
-        opacity: 1;
-    }
-
-    50% {
-        transform: scale(1.2);
-        opacity: 0.8;
-    }
-
-    100% {
-        transform: scale(1);
-        opacity: 1;
-    }
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
 }
 
 @keyframes ripple {
-    0% {
-        transform: scale(1);
-        opacity: 0.8;
-    }
-
-    100% {
-        transform: scale(2.5);
-        opacity: 0;
-    }
+    0% { transform: scale(1); opacity: 0.6; }
+    100% { transform: scale(2); opacity: 0; }
 }
 
 @keyframes flicker {
-
-    0%,
-    100% {
-        opacity: 1;
-        transform: scale(1);
-    }
-
-    50% {
-        opacity: 0.3;
-        transform: scale(0.9);
-    }
-
-    10%,
-    90% {
-        opacity: 0.8;
-    }
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.9); }
 }
 
 /* Node Content */
@@ -134,132 +113,217 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1rem;
+    padding-right: 2rem;
 }
 
 .node-service {
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: white;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1a1a2e;
 }
 
 .node-price {
-    color: #888;
+    color: #666;
     font-size: 0.9rem;
+    font-weight: 500;
 }
 
 /* The AI Verdict Data */
 .node-metrics {
     display: flex;
-    gap: 1rem;
+    gap: 0.75rem;
     margin-bottom: 1rem;
 }
 
-/* Metric Tile - Cyber-Glass Style */
+/* Metric Tile */
 .metric {
     flex: 1;
-    background-color: #0a0a0f !important;
-    /* Fallback */
-    background: linear-gradient(180deg, rgba(20, 20, 30, 0.9) 0%, rgba(5, 5, 10, 0.95) 100%) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    border-top-color: rgba(255, 255, 255, 0.2) !important;
-    border-radius: 12px;
-    /* Slightly softer */
-    padding: 0.8rem;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 0.75rem;
     text-align: center;
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    position: relative;
-    /* For Tooltip positioning */
-    cursor: help;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5) !important;
+    transition: all 0.2s ease;
+    cursor: default;
 }
 
-/* Hover: Subtle Outline Highlight */
 .metric:hover {
-    border-color: rgba(0, 243, 255, 0.5);
-    /* Neon Blue highlight */
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
-    transform: translateY(-2px);
+    border-color: #1976d2;
 }
 
 .metric-label {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     text-transform: uppercase;
-    letter-spacing: 1px;
-    color: #bbb;
-    margin-bottom: 0.3rem;
+    letter-spacing: 0.5px;
+    color: #999;
+    margin-bottom: 0.25rem;
     display: block;
 }
 
 .metric-value {
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 600;
-    color: #00f3ff;
-    /* Neon Blue */
-    text-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
+    color: #1976d2;
 }
 
-/* Tooltip Implementation */
+/* Tooltip - hidden on touch devices */
+.metric[data-tooltip] {
+    position: relative;
+}
+
 .metric::after {
     content: attr(data-tooltip);
     position: absolute;
     bottom: 100%;
     left: 50%;
-    transform: translateX(-50%) translateY(-10px);
-    background: #000;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #fff;
-    padding: 0.5rem 0.8rem;
+    transform: translateX(-50%) translateY(-8px);
+    background: #1a1a2e;
+    color: white;
+    padding: 0.5rem 0.75rem;
     border-radius: 6px;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     white-space: nowrap;
     opacity: 0;
     pointer-events: none;
     transition: all 0.2s ease;
     z-index: 10;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-    font-weight: normal;
 }
 
 .metric:hover::after {
     opacity: 1;
-    transform: translateX(-50%) translateY(-5px);
+    transform: translateX(-50%) translateY(-4px);
 }
 
 /* The AI Insight Text */
 .ai-insight {
-    background: rgba(0, 0, 0, 0.3);
-    padding: 0.8rem;
+    background: white;
+    padding: 0.75rem 1rem;
     border-radius: 8px;
-    border-left: 2px solid;
+    border-left: 3px solid;
     font-size: 0.85rem;
-    line-height: 1.4;
-    margin-top: 1rem;
+    line-height: 1.5;
+    margin-top: 0.75rem;
 }
 
 .insight-high {
-    border-color: #00f3ff;
-    color: #ccfbfd;
+    border-color: #1976d2;
+    background: #e3f2fd;
+    color: #1565c0;
 }
 
 .insight-stable {
-    border-color: #34c759;
-    color: #d6fce0;
+    border-color: #4caf50;
+    background: #e8f5e9;
+    color: #2e7d32;
 }
 
 .insight-decay {
-    border-color: #ffcc00;
-    color: #fff8cc;
+    border-color: #ff9800;
+    background: #fff3e0;
+    color: #e65100;
 }
 
 .insight-zombie {
-    border-color: #ff3b30;
-    color: #ffd6d4;
+    border-color: #f44336;
+    background: #ffebee;
+    color: #c62828;
+}
+
+.ai-insight strong {
+    display: block;
+    margin-bottom: 0.25rem;
 }
 
 .entropy-score {
-    font-family: 'Courier New', monospace;
+    font-family: 'SF Mono', 'Roboto Mono', monospace;
     font-size: 0.7rem;
-    opacity: 0.5;
-    margin-top: 0.5rem;
+    color: #999;
+    margin-top: 0.75rem;
     text-align: right;
+}
+
+/* ================================================
+   MOBILE RESPONSIVE STYLES
+   ================================================ */
+@media (max-width: 768px) {
+    .sentience-layer {
+        margin: 0 1rem 1rem;
+        padding: 1rem;
+    }
+
+    .sentience-layer h3 {
+        font-size: 0.9rem;
+        flex-wrap: wrap;
+    }
+
+    .sentience-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    .smart-node {
+        padding: 1rem;
+    }
+
+    .smart-node:hover {
+        transform: none;
+    }
+
+    .node-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+        padding-right: 2rem;
+    }
+
+    .node-service {
+        font-size: 1rem;
+    }
+
+    .node-price {
+        font-size: 0.85rem;
+    }
+
+    .node-metrics {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .metric {
+        padding: 0.6rem;
+    }
+
+    .metric-label {
+        font-size: 0.6rem;
+    }
+
+    .metric-value {
+        font-size: 0.95rem;
+    }
+
+    .metric::after {
+        display: none;
+    }
+
+    .ai-insight {
+        font-size: 0.8rem;
+        padding: 0.6rem 0.75rem;
+    }
+
+    .ai-insight .btn {
+        font-size: 0.75rem !important;
+        padding: 0.5rem 0.75rem !important;
+        margin-top: 0.5rem;
+    }
+
+    .entropy-orb {
+        top: 1rem;
+        right: 1rem;
+        width: 10px;
+        height: 10px;
+    }
+
+    .entropy-score {
+        font-size: 0.65rem;
+    }
 }

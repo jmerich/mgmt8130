@@ -1,33 +1,132 @@
+/* Methodology Link - Light Theme */
+/* Theme variables available from theme.css (imported in App.tsx) */
 .methodology-link {
     display: flex;
     justify-content: center;
-    margin-top: 3rem;
-    padding-bottom: 2rem;
-    opacity: 0.5;
-    transition: opacity 0.2s;
-}
-
-.methodology-link:hover {
-    opacity: 1;
+    gap: var(--space-xl, 2rem);
+    margin: 0 var(--space-xl, 2rem) var(--space-xl, 2rem);
+    padding: var(--space-md, 1rem) 0;
 }
 
 .methodology-link button {
     background: none;
     border: none;
-    color: #666;
-    font-size: 0.8rem;
+    color: var(--color-primary, #1976d2);
+    font-size: var(--font-size-sm, 0.85rem);
     cursor: pointer;
-    text-decoration: underline;
-    letter-spacing: 1px;
+    text-decoration: none;
+    letter-spacing: 0.5px;
+    padding: var(--space-sm, 0.5rem) var(--space-md, 1rem);
+    border-radius: var(--border-radius-md, 6px);
+    transition: all var(--transition-normal, 0.2s ease);
+}
+
+.methodology-link button:hover {
+    background: var(--color-primary-light, #e3f2fd);
+}
+
+/* Methodology Modal */
+.methodology-modal {
+    max-height: 80vh;
+    overflow-y: auto;
 }
 
 .methodology-modal h4 {
-    margin: 0 0 0.5rem 0;
+    margin: 0 0 var(--space-sm, 0.5rem) 0;
     font-size: 1.1rem;
+    color: var(--text-primary, #1a1a2e);
 }
 
 .methodology-modal p {
     margin: 0;
-    line-height: 1.5;
-    color: #ccc;
+    line-height: var(--line-height-normal, 1.6);
+    color: var(--text-secondary, #666);
+}
+
+.concept-block {
+    background: var(--bg-card-hover, #f8f9fa);
+    border: 1px solid var(--border-color, #e0e0e0);
+    border-radius: var(--border-radius-md, 8px);
+    padding: var(--space-md, 1rem);
+    margin-bottom: var(--space-md, 1rem);
+}
+
+.concept-block:last-child {
+    margin-bottom: 0;
+}
+
+.concept-block h4 {
+    color: #1976d2;
+}
+
+.concept-block ul {
+    margin: 0.5rem 0 0 0;
+    padding-left: 1.25rem;
+    color: #666;
+}
+
+.concept-block li {
+    margin-bottom: 0.25rem;
+}
+
+/* Graveyard List */
+.graveyard-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.graveyard-list .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.graveyard-list .detail-row:last-child {
+    border-bottom: none;
+}
+
+/* ================================================
+   MOBILE RESPONSIVE STYLES
+   ================================================ */
+@media (max-width: 768px) {
+    .methodology-link {
+        flex-direction: column;
+        gap: 0.5rem;
+        margin: 0 1rem 1rem;
+        align-items: center;
+    }
+
+    .methodology-link button {
+        font-size: 0.8rem;
+        width: 100%;
+        text-align: center;
+    }
+
+    .methodology-modal h4 {
+        font-size: 1rem;
+    }
+
+    .methodology-modal p {
+        font-size: 0.9rem;
+    }
+
+    .concept-block {
+        padding: 0.75rem;
+    }
+
+    .concept-block ul {
+        font-size: 0.85rem;
+    }
+
+    .graveyard-list .detail-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    .graveyard-list .detail-row .btn {
+        width: 100%;
+    }
 }

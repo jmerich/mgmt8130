@@ -1,8 +1,9 @@
 /* Auto-Negotiation Feature Styles - Advanced Version */
+/* Theme variables available from theme.css (imported in App.tsx) */
 
 .auto-negotiation.advanced {
   padding: 0;
-  background: #f5f7fa;
+  background: var(--bg-page, #f5f7fa);
   min-height: 100vh;
 }
 
@@ -10,9 +11,9 @@
 /* HERO HEADER */
 /* ============================================ */
 .hero-header {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-  color: white;
-  padding: 2.5rem 3rem;
+  background: var(--bg-header, linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%));
+  color: var(--text-inverse, white);
+  padding: var(--header-padding-y, 2.5rem) var(--header-padding-x, 3rem);
   margin-bottom: 0;
 }
 
@@ -22,13 +23,13 @@
 
 .hero-badge {
   display: inline-block;
-  background: linear-gradient(90deg, #4caf50, #45a049);
+  background: linear-gradient(90deg, var(--color-success, #4caf50), var(--color-success-hover, #45a049));
   padding: 0.35rem 1rem;
-  border-radius: 20px;
+  border-radius: var(--border-radius-pill, 20px);
   font-size: 0.7rem;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold, 700);
   letter-spacing: 1px;
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-md, 1rem);
 }
 
 .hero-header h1 {
@@ -85,34 +86,34 @@
 .feature-tabs {
   display: flex;
   gap: 0;
-  background: white;
-  padding: 0 1rem;
-  border-bottom: 1px solid #e0e0e0;
+  background: var(--bg-card, white);
+  padding: 0 var(--space-md, 1rem);
+  border-bottom: 1px solid var(--border-color, #e0e0e0);
   overflow-x: auto;
 }
 
 .feature-tabs button {
-  padding: 1rem 1.25rem;
+  padding: var(--space-md, 1rem) 1.25rem;
   border: none;
   background: transparent;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: #666;
+  font-size: var(--font-size-sm, 0.85rem);
+  font-weight: var(--font-weight-medium, 500);
+  color: var(--text-secondary, #666);
   cursor: pointer;
   border-bottom: 3px solid transparent;
   white-space: nowrap;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal, 0.2s ease);
 }
 
 .feature-tabs button:hover {
-  color: #333;
-  background: #f5f5f5;
+  color: var(--text-primary, #333);
+  background: var(--bg-card-hover, #f5f5f5);
 }
 
 .feature-tabs button.active {
-  color: #1976d2;
-  border-bottom-color: #1976d2;
-  font-weight: 600;
+  color: var(--color-primary, #1976d2);
+  border-bottom-color: var(--color-primary, #1976d2);
+  font-weight: var(--font-weight-semibold, 600);
 }
 
 /* ============================================ */
@@ -127,14 +128,14 @@
 }
 
 .tab-header h2 {
-  margin: 0 0 0.5rem 0;
-  font-size: 1.5rem;
-  color: #1a1a2e;
+  margin: 0 0 var(--space-sm, 0.5rem) 0;
+  font-size: var(--font-size-2xl, 1.5rem);
+  color: var(--text-primary, #1a1a2e);
 }
 
 .tab-header p {
   margin: 0;
-  color: #666;
+  color: var(--text-secondary, #666);
 }
 
 /* ============================================ */
@@ -149,16 +150,16 @@
 .subscription-card {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: var(--space-md, 1rem);
   padding: 1.25rem;
-  background: white;
-  border-radius: 12px;
-  border: 1px solid #e0e0e0;
-  transition: all 0.2s ease;
+  background: var(--bg-card, white);
+  border-radius: var(--border-radius-lg, 12px);
+  border: 1px solid var(--border-color, #e0e0e0);
+  transition: all var(--transition-normal, 0.2s ease);
 }
 
 .subscription-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md, 0 4px 12px rgba(0, 0, 0, 0.1));
   transform: translateY(-2px);
 }
 
@@ -1774,22 +1775,22 @@
 }
 
 .btn.primary {
-  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--color-primary, #1976d2) 0%, var(--color-primary-hover, #1565c0) 100%);
+  color: var(--text-inverse, white);
 }
 
 .btn.primary:hover {
-  background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
-  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
+  background: linear-gradient(135deg, var(--color-primary-hover, #1565c0) 0%, #0d47a1 100%);
+  box-shadow: var(--shadow-primary, 0 4px 12px rgba(25, 118, 210, 0.3));
 }
 
 .btn.secondary {
-  background: #f5f5f5;
-  color: #333;
+  background: var(--bg-card-hover, #f5f5f5);
+  color: var(--text-primary, #333);
 }
 
 .btn.secondary:hover {
-  background: #e0e0e0;
+  background: var(--border-color, #e0e0e0);
 }
 
 /* ============================================ */
@@ -1808,14 +1809,51 @@
 /* RESPONSIVE */
 /* ============================================ */
 @media (max-width: 768px) {
+  .auto-negotiation.advanced {
+    overflow-x: hidden;
+  }
+
+  /* Hero Header */
+  .hero-header {
+    padding: 1.5rem 1rem;
+  }
+
+  .hero-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .hero-header p {
+    font-size: 0.95rem;
+  }
+
+  .hero-content {
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+
+  .hero-badge {
+    font-size: 0.65rem;
+    padding: 0.25rem 0.75rem;
+  }
+
   .hero-stats {
     grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
   }
 
-  .intel-stats {
-    grid-template-columns: repeat(2, 1fr);
+  .hero-stat {
+    padding: 1rem 0.75rem;
   }
 
+  .hero-stat-value {
+    font-size: 1.35rem;
+  }
+
+  .hero-stat-label {
+    font-size: 0.7rem;
+  }
+
+  /* Feature Tabs */
   .feature-tabs {
     padding: 0 0.5rem;
   }
@@ -1825,10 +1863,22 @@
     font-size: 0.75rem;
   }
 
+  /* Tab Content */
   .tab-content {
     padding: 1rem;
   }
 
+  .tab-header h2 {
+    font-size: 1.25rem;
+  }
+
+  /* Intel Stats */
+  .intel-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  /* Subscriptions Grid */
   .subscriptions-grid {
     grid-template-columns: 1fr;
   }
@@ -1842,5 +1892,78 @@
     text-align: center;
     width: 100%;
     margin-top: 0.5rem;
+  }
+
+  .negotiating-badge {
+    justify-content: center;
+  }
+
+  /* Strategies Tab */
+  .agents-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .agent-card {
+    padding: 1rem;
+  }
+
+  .agent-icon {
+    font-size: 2rem;
+  }
+
+  .agent-card h4 {
+    font-size: 0.85rem;
+  }
+
+  .tactics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tactic-card {
+    padding: 1rem;
+  }
+
+  /* Vendor Quick Intel */
+  .vendor-quick-intel {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.35rem;
+  }
+
+  /* Success Stories */
+  .timeline-entry {
+    padding-left: 1.5rem;
+    margin-left: 0;
+  }
+
+  /* Modal Styles */
+  .negotiation-modal {
+    width: 95%;
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+
+  .modal-header h3 {
+    font-size: 1.25rem;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .modal-actions button {
+    width: 100%;
+  }
+
+  /* Comparison Grid */
+  .comparison-plans {
+    grid-template-columns: 1fr;
+  }
+
+  /* Action Buttons */
+  .negotiate-btn {
+    width: 100%;
+    justify-content: center;
   }
 }
